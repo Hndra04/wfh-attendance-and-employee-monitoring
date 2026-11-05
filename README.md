@@ -13,28 +13,52 @@ This repository contains the initial monorepo boilerplate for the two-scope appl
 - `packages/monitoring-service` — NestJS monitoring backend
 - `docker-compose.yml` — MySQL 8 service for local development
 
-## Local setup
+## Docker-based setup
 
-1. Copy `.env.example` to `.env` and adjust values as needed.
-2. Start the database:
+1. Copy `.env.example` to `.env`.
+2. Set `INITIAL_HRD_ADMIN_EMAIL` and `INITIAL_HRD_ADMIN_PASSWORD` in `.env`. Use a unique password with at least 12 characters. `.env` is ignored by Git; do not commit it.
+3. Start MySQL and build the one-off admin bootstrap container:
    ```bash
-   npm run docker:up
+   docker compose build admin-bootstrap
+   docker compose up -d mysql
    ```
-3. Install dependencies:
+4. Create the initial HRD admin:
    ```bash
-   npm install
+   docker compose run --rm admin-bootstrap
    ```
-4. Run the apps:
+   The command hashes the password with bcrypt and sets `must_change_password`. It does not print the password and will not overwrite an existing active account.
+5. Start the application containers:
    ```bash
-   npm run dev:absensi-service
-   npm run dev:monitoring-service
-   npm run dev:absensi-web
-   npm run dev:monitoring-web
+   docker compose up --build -d
    ```
+6. Access the apps:
+   - Absensi Web: http://localhost:5173
+   - Monitoring Web: http://localhost:5174
+   - Absensi API: http://localhost:3001/api/v1
+   - Monitoring API: http://localhost:3002/api/v1
+   - MySQL: localhost:3306
+
+The bootstrap command applies the initial TypeORM migration before inserting the admin, so it works with both fresh and existing database volumes. Do not delete a volume that contains data.
+
+## Useful commands
+
+```bash
+# Start containers in the background
+docker compose up -d --build
+
+# Stop all containers
+docker compose down
+
+# Rebuild one service after code changes
+docker compose build absensi-service
+
+# View logs
+docker compose logs -f absensi-service
+```
 
 ## Current status
 
-This is the foundational boilerplate phase. The repo now includes the monorepo layout, NestJS service skeletons, Vite React shells, and local Docker database config required by the PRD.
+This is the foundational boilerplate phase. The repo now includes the monorepo layout, NestJS service skeletons, Vite React shells, and a Docker Compose setup for the database and application services required by the PRD.
 
 ## Notes
 

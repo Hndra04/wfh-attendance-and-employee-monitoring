@@ -7,7 +7,9 @@
     "start": "node dist/main",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
-    "test": "jest"
+    "test": "jest",
+    "db:migrate": "node scripts/migrate.mjs",
+    "bootstrap:admin": "node scripts/bootstrap-admin.mjs"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.7",
@@ -15,10 +17,14 @@
     "@nestjs/core": "^10.4.7",
     "@nestjs/platform-express": "^10.4.7",
     "@nestjs/swagger": "^8.0.0",
+    "bcryptjs": "^2.4.3",
     "class-transformer": "^0.5.0",
     "class-validator": "^0.14.0",
+    "mysql2": "^3.11.3",
     "reflect-metadata": "^0.2.0",
-    "rxjs": "^7.6.2"
+    "rxjs": "^7.6.2",
+    "typeorm": "^0.3.20",
+    "ulid": "^2.3.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.2.0",
