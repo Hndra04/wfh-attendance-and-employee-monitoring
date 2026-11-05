@@ -1,0 +1,20 @@
+version: '3.9'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: wfh-attendance-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-wfh_attendance_db}
+      MYSQL_USER: ${MYSQL_USER:-wfh_attendance_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-wfh_attendance_password}
+    ports:
+      - '3306:3306'
+    volumes:
+      - wfh_attendance_mysql_data:/var/lib/mysql
+    command: --default-authentication-plugin=mysql_native_password
+
+volumes:
+  wfh_attendance_mysql_data:
