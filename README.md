@@ -15,6 +15,8 @@ This repository contains the initial monorepo boilerplate for the two-scope appl
 
 ## Docker-based setup
 
+The NestJS 12 tooling requires Node.js 22.22.3 or newer; all application Dockerfiles use the Node 22 image.
+
 1. Copy `.env.example` to `.env`.
 2. Set `INITIAL_HRD_ADMIN_EMAIL` and `INITIAL_HRD_ADMIN_PASSWORD` in `.env`. Use a unique password with at least 8 characters. `.env` is ignored by Git; do not commit it.
 3. Start MySQL and build the services:
@@ -55,6 +57,18 @@ Set `JWT_ACCESS_TTL` to a duration such as `15m` or `1h`. Set `ABSENSI_WEB_ORIGI
 
 Use unique, high-entropy `JWT_SECRET_ABSENSI` and `JWT_SECRET_MONITORING` values in `.env`; the Compose defaults are for local development only.
 
+## Attendance API
+
+The Absensi API provides authenticated employee endpoints:
+
+- `POST /api/v1/attendances/check-in` and `POST /api/v1/attendances/check-out` accept `multipart/form-data` with a required `photo` (JPEG or PNG, up to 5 MB). Check-in also accepts an optional `notes` field. The server records timestamps and calculates the Jakarta attendance date and late status.
+- `GET /api/v1/attendances/today` returns today's record, or `data: null` if the employee has not checked in.
+- `GET /api/v1/attendances/me` returns the employee's paginated history. Optional query parameters are `from`, `to` (`YYYY-MM-DD`), `page`, `limit` (maximum 100), and `sort` (`asc` or `desc`).
+- `GET /api/v1/attendances/me/{attendanceId}` returns one of the employee's records.
+- `GET /api/v1/attendances/me/{attendanceId}/photos/{kind}` streams that record's private photo; `kind` is `check-in` or `check-out`. Requests for another employee's photo return `403`.
+
+Include the access token in the `Authorization` request header using the Bearer scheme. Photos are stored under `UPLOAD_DIR` (default `/app/uploads` in Docker) and are only served through these authenticated endpoints.
+
 ## TypeORM entities and migrations
 
 Database models are TypeORM entities in each service's `src/database/entities` directory. Migrations are generated from those entities and reviewed before applying. Run monitoring migrations first on the shared database, then generate attendance migrations; attendance includes matching reference entities to preserve shared-table foreign keys without owning those tables:
@@ -91,7 +105,7 @@ It refuses to run unless the selected database ends in `_perf` and has an empty 
 
 ## Current status
 
-Sprints 0–2 (Foundation, Data foundation, and Authentication) are complete. Both APIs have role-specific authentication, refresh-token rotation, guarded profile/password endpoints, and authentication unit tests.
+Sprints 0–3 (Foundation, Data foundation, Authentication, and Attendance API) are complete. Both APIs have role-specific authentication, refresh-token rotation, and guarded profile/password endpoints; the Absensi API has automated attendance tests and has been smoke-tested in Docker for photo check-in/out, ownership, and duplicate protection.
 
 ## Notes
 

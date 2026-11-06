@@ -6,6 +6,12 @@
     "apps/*",
     "packages/*"
   ],
+  "overrides": {
+    "typeorm": {
+      "glob": "^14.0.4",
+      "minimatch": "^11.0.5"
+    }
+  },
   "scripts": {
     "dev:absensi-service": "npm run start:dev -w @wfh-attendance/absensi-service",
     "dev:monitoring-service": "npm run start:dev -w @wfh-attendance/monitoring-service",

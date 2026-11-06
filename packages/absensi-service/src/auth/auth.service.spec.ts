@@ -1,6 +1,7 @@
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { DataSource, Repository } from 'typeorm';
+import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 
 import { RefreshToken } from '../database/entities/refresh-token.entity';
 import { User, UserRole } from '../database/entities/user.entity';
@@ -9,28 +10,28 @@ import { AuthService } from './auth.service';
 describe('Absensi AuthService', () => {
   let service: AuthService;
   let users: {
-    findOne: jest.Mock;
-    save: jest.Mock;
+    findOne: Mock;
+    save: Mock;
   };
   let refreshTokens: {
-    create: jest.Mock;
-    save: jest.Mock;
-    update: jest.Mock;
+    create: Mock;
+    save: Mock;
+    update: Mock;
   };
-  let jwtService: { signAsync: jest.Mock };
-  let dataSource: { transaction: jest.Mock };
+  let jwtService: { signAsync: Mock };
+  let dataSource: { transaction: Mock };
 
   beforeEach(() => {
     process.env.JWT_SECRET_ABSENSI = 'test-secret-that-is-long-enough-for-unit-testing';
     process.env.JWT_ACCESS_TTL = '15m';
-    users = { findOne: jest.fn(), save: jest.fn((user) => user) };
+    users = { findOne: vi.fn(), save: vi.fn((user) => user) };
     refreshTokens = {
-      create: jest.fn((token) => token),
-      save: jest.fn((token) => token),
-      update: jest.fn(),
+      create: vi.fn((token) => token),
+      save: vi.fn((token) => token),
+      update: vi.fn(),
     };
-    jwtService = { signAsync: jest.fn().mockResolvedValue('signed-access-token') };
-    dataSource = { transaction: jest.fn() };
+    jwtService = { signAsync: vi.fn().mockResolvedValue('signed-access-token') };
+    dataSource = { transaction: vi.fn() };
     service = new AuthService(
       jwtService as unknown as JwtService,
       dataSource as unknown as DataSource,
@@ -94,12 +95,12 @@ describe('Absensi AuthService', () => {
     const user = createUser(UserRole.EMPLOYEE, await bcrypt.hash('correct-password', 10));
     const oldToken = createRefreshToken(user.id);
     const tokenRepository = {
-      findOne: jest.fn().mockResolvedValue(oldToken),
-      create: jest.fn((token) => token),
-      save: jest.fn((token) => token),
-      update: jest.fn(),
+      findOne: vi.fn().mockResolvedValue(oldToken),
+      create: vi.fn((token) => token),
+      save: vi.fn((token) => token),
+      update: vi.fn(),
     };
-    const userRepository = { findOne: jest.fn().mockResolvedValue(user) };
+    const userRepository = { findOne: vi.fn().mockResolvedValue(user) };
     dataSource.transaction.mockImplementation((operation) =>
       operation({
         getRepository: (entity: unknown) =>
@@ -119,8 +120,8 @@ describe('Absensi AuthService', () => {
     const oldToken = createRefreshToken('user-id');
     oldToken.revokedAt = new Date();
     const tokenRepository = {
-      findOne: jest.fn().mockResolvedValue(oldToken),
-      update: jest.fn(),
+      findOne: vi.fn().mockResolvedValue(oldToken),
+      update: vi.fn(),
     };
     dataSource.transaction.mockImplementation((operation) =>
       operation({ getRepository: () => tokenRepository }),
@@ -138,10 +139,10 @@ describe('Absensi AuthService', () => {
   it('changes the password and revokes remaining refresh sessions', async () => {
     const user = createUser(UserRole.EMPLOYEE, await bcrypt.hash('current-password', 10));
     const userRepository = {
-      findOne: jest.fn().mockResolvedValue(user),
-      save: jest.fn((savedUser) => savedUser),
+      findOne: vi.fn().mockResolvedValue(user),
+      save: vi.fn((savedUser) => savedUser),
     };
-    const tokenRepository = { update: jest.fn() };
+    const tokenRepository = { update: vi.fn() };
     dataSource.transaction.mockImplementation((operation) =>
       operation({
         getRepository: (entity: unknown) =>
