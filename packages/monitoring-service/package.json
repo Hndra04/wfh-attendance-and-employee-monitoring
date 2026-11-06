@@ -8,8 +8,11 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "test": "jest",
-    "db:migrate": "node scripts/migrate.mjs",
-    "bootstrap:admin": "node scripts/bootstrap-admin.mjs"
+    "db:migrate": "typeorm-ts-node-commonjs migration:run -d src/database/data-source.ts",
+    "db:migrate:revert": "typeorm-ts-node-commonjs migration:revert -d src/database/data-source.ts",
+    "db:migration:generate": "typeorm-ts-node-commonjs migration:generate",
+    "bootstrap:admin": "npm run db:migrate && node scripts/bootstrap-admin.mjs",
+    "seed:demo": "npm run db:migrate && node scripts/seed-demo.mjs"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.7",
@@ -34,6 +37,7 @@
     "eslint": "^9.0.0",
     "jest": "^29.7.0",
     "ts-jest": "^29.1.0",
+    "ts-node": "^10.9.2",
     "typescript": "^5.7.2"
   }
 }

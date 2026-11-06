@@ -15,9 +15,9 @@ if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
   throw new Error('INITIAL_HRD_ADMIN_EMAIL must be a valid email address.');
 }
 
-if (password.length < 12 || Buffer.byteLength(password, 'utf8') > 72) {
+if (password.length < 8 || Buffer.byteLength(password, 'utf8') > 72) {
   throw new Error(
-    'INITIAL_HRD_ADMIN_PASSWORD must be at least 12 characters and no more than 72 UTF-8 bytes.',
+    'INITIAL_HRD_ADMIN_PASSWORD must be at least 8 characters and no more than 72 UTF-8 bytes.',
   );
 }
 
@@ -29,8 +29,6 @@ const missingDatabaseVariables = requiredDatabaseVariables.filter(
 if (missingDatabaseVariables.length > 0) {
   throw new Error(`Missing database configuration: ${missingDatabaseVariables.join(', ')}.`);
 }
-
-await import('./migrate.mjs');
 
 const connection = await mysql.createConnection({
   host: process.env.DB_HOST ?? 'localhost',

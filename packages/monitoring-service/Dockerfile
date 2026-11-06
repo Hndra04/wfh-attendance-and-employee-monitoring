@@ -7,6 +7,7 @@ COPY tsconfig.base.json ./
 COPY packages/absensi-service/package.json ./packages/absensi-service/package.json
 COPY packages/absensi-service/tsconfig.json ./packages/absensi-service/tsconfig.json
 COPY packages/absensi-service/nest-cli.json ./packages/absensi-service/nest-cli.json
+COPY packages/absensi-service/scripts ./packages/absensi-service/scripts
 COPY packages/absensi-service/src ./packages/absensi-service/src
 COPY packages/monitoring-service/package.json ./packages/monitoring-service/package.json
 COPY packages/monitoring-service/tsconfig.json ./packages/monitoring-service/tsconfig.json
@@ -25,6 +26,7 @@ COPY apps/monitoring-web/tsconfig.node.json ./apps/monitoring-web/tsconfig.node.
 COPY apps/monitoring-web/vite.config.ts ./apps/monitoring-web/vite.config.ts
 COPY apps/monitoring-web/index.html ./apps/monitoring-web/index.html
 COPY apps/monitoring-web/src ./apps/monitoring-web/src
+COPY seed ./seed
 
 RUN npm install
 

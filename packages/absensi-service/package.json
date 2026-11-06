@@ -7,7 +7,12 @@
     "start": "node dist/main",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
-    "test": "jest"
+    "test": "jest",
+    "db:migrate": "typeorm-ts-node-commonjs migration:run -d src/database/migration-data-source.ts",
+    "db:migrate:revert": "typeorm-ts-node-commonjs migration:revert -d src/database/migration-data-source.ts",
+    "db:migration:generate": "typeorm-ts-node-commonjs migration:generate",
+    "seed:demo": "npm run db:migrate && node scripts/seed-demo.mjs",
+    "seed:performance": "npm run db:migrate && node scripts/seed-performance.mjs"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.7",
@@ -17,8 +22,11 @@
     "@nestjs/swagger": "^8.0.0",
     "class-transformer": "^0.5.0",
     "class-validator": "^0.14.0",
+    "mysql2": "^3.11.3",
     "reflect-metadata": "^0.2.0",
-    "rxjs": "^7.6.2"
+    "rxjs": "^7.6.2",
+    "typeorm": "^0.3.20",
+    "ulid": "^2.3.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.2.0",
@@ -28,6 +36,7 @@
     "eslint": "^9.0.0",
     "jest": "^29.7.0",
     "ts-jest": "^29.1.0",
+    "ts-node": "^10.9.2",
     "typescript": "^5.7.2"
   }
 }

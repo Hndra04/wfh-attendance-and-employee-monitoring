@@ -1,0 +1,22 @@
+[
+  {
+    "id": "01M6P2A2RGQS3GGGAGDRM6CHDA",
+    "fullName": "Ayu Pratama",
+    "email": "ayu.pratama@example.test",
+    "department": "Operations",
+    "position": "Staff",
+    "joinDate": "2024-01-15",
+    "phone": "+628111000001",
+    "address": "Jakarta"
+  },
+  {
+    "id": "01M6P2A2RHYYNBAD38EBAC6EPW",
+    "fullName": "Bima Santoso",
+    "email": "bima.santoso@example.test",
+    "department": "Finance",
+    "position": "Analyst",
+    "joinDate": "2023-08-01",
+    "phone": "+628111000002",
+    "address": "Jakarta"
+  }
+]
