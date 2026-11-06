@@ -54,6 +54,9 @@ services:
       DB_USER: ${MYSQL_USER:-wfh_attendance_user}
       DB_PASSWORD: ${MYSQL_PASSWORD:-wfh_attendance_password}
       JWT_SECRET_ABSENSI: ${JWT_SECRET_ABSENSI:-dev_absensi_secret}
+      JWT_ACCESS_TTL: ${JWT_ACCESS_TTL:-15m}
+      TRUSTED_PROXY_HOPS: ${TRUSTED_PROXY_HOPS:-0}
+      CORS_ORIGIN: ${ABSENSI_WEB_ORIGIN:-http://localhost:5173}
       INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:-dev_internal_token}
       WORK_START_TIME: ${WORK_START_TIME:-09:00}
       UPLOAD_DIR: ${UPLOAD_DIR:-/app/uploads}
@@ -79,6 +82,9 @@ services:
       DB_USER: ${MYSQL_USER:-wfh_attendance_user}
       DB_PASSWORD: ${MYSQL_PASSWORD:-wfh_attendance_password}
       JWT_SECRET_MONITORING: ${JWT_SECRET_MONITORING:-dev_monitoring_secret}
+      JWT_ACCESS_TTL: ${JWT_ACCESS_TTL:-15m}
+      TRUSTED_PROXY_HOPS: ${TRUSTED_PROXY_HOPS:-0}
+      CORS_ORIGIN: ${MONITORING_WEB_ORIGIN:-http://localhost:5174}
       INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:-dev_internal_token}
     depends_on:
       schema-migrate:

@@ -47,6 +47,14 @@ This repository contains the initial monorepo boilerplate for the two-scope appl
 
 The admin bootstrap applies monitoring migrations before inserting the admin. Migrations are additive and recorded in the shared TypeORM migration table. Do not delete a volume that contains data.
 
+## Authentication
+
+Both APIs expose `POST /api/v1/auth/login`, `POST /api/v1/auth/refresh`, `POST /api/v1/auth/logout`, `GET /api/v1/auth/me`, and `PATCH /api/v1/auth/me/password`. Monitoring accepts only `HRD_ADMIN`; Absensi accepts only `EMPLOYEE`. Login and refresh responses return the access token in JSON and set a rotating refresh token in a service-specific `HttpOnly`, `SameSite=Lax` cookie. Access tokens default to 15 minutes; refresh tokens last 7 days.
+
+Set `JWT_ACCESS_TTL` to a duration such as `15m` or `1h`. Set `ABSENSI_WEB_ORIGIN` and `MONITORING_WEB_ORIGIN` when the frontends use non-default origins. `TRUSTED_PROXY_HOPS` defaults to `0`; configure it to the exact number of trusted reverse-proxy hops so login throttling uses the correct client IP. Failed-login limits are held in each API process, so multiple replicas require a shared rate-limit store.
+
+Use unique, high-entropy `JWT_SECRET_ABSENSI` and `JWT_SECRET_MONITORING` values in `.env`; the Compose defaults are for local development only.
+
 ## TypeORM entities and migrations
 
 Database models are TypeORM entities in each service's `src/database/entities` directory. Migrations are generated from those entities and reviewed before applying. Run monitoring migrations first on the shared database, then generate attendance migrations; attendance includes matching reference entities to preserve shared-table foreign keys without owning those tables:
@@ -83,7 +91,7 @@ It refuses to run unless the selected database ends in `_perf` and has an empty 
 
 ## Current status
 
-Sprint 0 (Foundation) and Sprint 1 (Data foundation) are complete. The repo includes the service-owned schema migrations, an environment-backed HRD bootstrap, and separate demo and performance seed scripts.
+Sprints 0–2 (Foundation, Data foundation, and Authentication) are complete. Both APIs have role-specific authentication, refresh-token rotation, guarded profile/password endpoints, and authentication unit tests.
 
 ## Notes
 
