@@ -41,9 +41,9 @@ export function LoginPage() {
           <span><strong>Monitoring</strong><small>Panel HRD</small></span>
         </div>
         <div className="admin-login-copy">
-          <p className="admin-eyebrow-light">Data kerja, lebih mudah dipantau</p>
-          <h1>Informasi karyawan dalam satu ruang.</h1>
-          <p>Kelola data karyawan dan tinjau presensi harian melalui satu panel yang aman.</p>
+          <p className="admin-eyebrow-light">Portal administrasi HR</p>
+          <h1>Data karyawan dan presensi.</h1>
+          <p>Masuk untuk mengelola data karyawan dan meninjau catatan presensi.</p>
         </div>
         <div className="admin-login-foot">Akses khusus administrator HR</div>
       </section>

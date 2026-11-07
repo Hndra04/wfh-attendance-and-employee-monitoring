@@ -1,9 +1,6 @@
 # WFH Attendance & Employee Monitoring
 
-This repository contains the initial monorepo boilerplate for the two-scope application described in the PRD:
-
-- Absensi WFH employee app
-- HRD monitoring admin app
+This monorepo contains the employee WFH attendance app and the HRD monitoring app described in the PRD. Employees use Absensi WFH to record attendance; HRD uses Monitoring to manage employee accounts and review attendance.
 
 ## Repository structure
 
@@ -42,41 +39,41 @@ The NestJS 12 tooling requires Node.js 22.22.3 or newer; all application Dockerf
    - Monitoring API: http://localhost:3002/api/v1
    - MySQL: localhost:3306
 
-Migrations are additive and recorded in the shared TypeORM migration table. Do not delete a volume that contains data.
+Migrations are additive and recorded in the shared TypeORM migration table. Keep the database volume if it contains data.
 
 ## Authentication
 
-Both APIs expose `POST /api/v1/auth/login`, `POST /api/v1/auth/refresh`, `POST /api/v1/auth/logout`, `GET /api/v1/auth/me`, and `PATCH /api/v1/auth/me/password`. Monitoring accepts only `HRD_ADMIN`; Absensi accepts only `EMPLOYEE`. Login and refresh responses return the access token in JSON and set a rotating refresh token in a service-specific `HttpOnly`, `SameSite=Lax` cookie. Access tokens default to 15 minutes; refresh tokens last 7 days.
+Both APIs expose `POST /api/v1/auth/login`, `POST /api/v1/auth/refresh`, `POST /api/v1/auth/logout`, `GET /api/v1/auth/me`, and `PATCH /api/v1/auth/me/password`. Monitoring accepts `HRD_ADMIN` accounts; Absensi accepts `EMPLOYEE` accounts. Login and refresh return an access token in JSON and rotate a service-specific refresh token in an `HttpOnly`, `SameSite=Lax` cookie. Access tokens expire after 15 minutes by default; refresh tokens last 7 days.
 
 Set `JWT_ACCESS_TTL` to a duration such as `15m` or `1h`. Set `ABSENSI_WEB_ORIGIN` and `MONITORING_WEB_ORIGIN` when the frontends use non-default origins. `TRUSTED_PROXY_HOPS` defaults to `0`; configure it to the exact number of trusted reverse-proxy hops so login throttling uses the correct client IP. Failed-login limits are held in each API process, so multiple replicas require a shared rate-limit store.
 
-Use unique, high-entropy `JWT_SECRET_ABSENSI` and `JWT_SECRET_MONITORING` values in `.env`; the Compose defaults are for local development only.
-Monitoring calls the Absensi internal API over the Compose network using `INTERNAL_SERVICE_TOKEN`. `ABSENSI_SERVICE_URL` defaults to `http://absensi-service:${PORT_ABSENSI}/api/v1` in Compose; override it only when the services are hosted at a different address.
+Set unique, high-entropy values for `JWT_SECRET_ABSENSI` and `JWT_SECRET_MONITORING` in `.env`. The Compose defaults are for local development only.
+Monitoring calls the Absensi internal API over the Compose network with `INTERNAL_SERVICE_TOKEN`. In Compose, `ABSENSI_SERVICE_URL` defaults to `http://absensi-service:${PORT_ABSENSI}/api/v1`; change it if the service uses a different address.
 
 ## Shared UI foundation
 
-Both React apps use `@wfh-attendance/ui` for accessible buttons, labelled inputs and selects, badges, loading and empty states, toasts, dialogs, tables, pagination, date ranges, and authenticated route guards. Shared styles provide keyboard focus indicators, responsive layouts, and reduced-motion support. The package uses the existing React and React Router dependencies and adds no UI framework.
+Both React apps use `@wfh-attendance/ui` for buttons, labelled inputs and selects, badges, loading and empty states, toasts, dialogs, tables, pagination, date ranges, and protected routes. Its styles include keyboard focus indicators, responsive layouts, and reduced-motion support. The package uses the existing React and React Router dependencies.
 
 ## Employee management API
 
-The monitoring API provides HRD-only employee list/search/filter, detail, create, update, status, soft-delete, password-reset, and explicit login-email-change endpoints under `/api/v1/employees`. Creating an employee and resetting a password each return a temporary password once; employees must change it at first login. Change an employee login email with `PATCH /api/v1/employees/{id}/email` and `{ "email": "new@example.test", "confirm": true }`; the employee and login email update in one transaction.
+Under `/api/v1/employees`, the monitoring API lets HRD list, search, filter, create, update, change status, soft-delete, and reset employee accounts. Creating an account or resetting its password returns a temporary password once; the employee must change it at first login. To change a login email, call `PATCH /api/v1/employees/{id}/email` with `{ "email": "new@example.test", "confirm": true }`. The service updates the employee and linked account in one transaction.
 
-The attendance service can retrieve employee details from `GET /api/v1/internal/employees/{id}` and resolve active IDs from `GET /api/v1/internal/employees/ids?department=...`. These monitoring endpoints require the `x-internal-service-token` header set to `INTERNAL_SERVICE_TOKEN`.
+The attendance service uses `GET /api/v1/internal/employees/{id}` to look up an employee and `GET /api/v1/internal/employees/ids?department=...` to resolve active IDs. Both routes require the `x-internal-service-token` header with the `INTERNAL_SERVICE_TOKEN` value.
 
 ## HRD attendance monitoring API
 
-The monitoring API provides authenticated, read-only attendance endpoints:
+The monitoring API provides authenticated, read-only attendance routes:
 
 - `GET /api/v1/attendances` supports `page`, `limit`, `employeeId`, `department`, `from`, `to`, `status`, and `sort` filters.
 - `GET /api/v1/attendances/{id}` returns an attendance record with its employee profile.
 - `GET /api/v1/attendances/{id}/photos/{kind}` streams its private photo; `kind` is `check-in` or `check-out`.
 - `GET /api/v1/dashboard/summary` returns today's Jakarta-date counters and the seven-day attendance series.
 
-The monitoring service resolves department filters to active employee IDs and calls the Absensi internal list, detail, photo, summary, and series routes with `x-internal-service-token`. Attendance photo URLs are proxied through monitoring; storage filenames and paths are not returned to HRD clients.
+For department filters, monitoring resolves active employee IDs and passes them to Absensi. It also proxies attendance details, photos, and dashboard data through the internal API. HRD clients never receive photo storage paths or filenames.
 
 ## Attendance API
 
-The Absensi API provides authenticated employee endpoints:
+The Absensi API provides these authenticated employee routes:
 
 - `POST /api/v1/attendances/check-in` and `POST /api/v1/attendances/check-out` accept `multipart/form-data` with a required `photo` (JPEG or PNG, up to 5 MB). Check-in also accepts an optional `notes` field. The server records timestamps and calculates the Jakarta attendance date and late status.
 - `GET /api/v1/attendances/today` returns today's record, or `data: null` if the employee has not checked in.
@@ -89,17 +86,17 @@ Include the access token in the `Authorization` request header using the Bearer 
 
 ## Employee web app
 
-The Absensi app at http://localhost:5173 supports employee login, required first-login password changes, today's check-in and check-out, attendance history and details, profile viewing, and sign-out. Check-in and check-out require a JPEG or PNG photo; camera access requires HTTPS or localhost, with a file picker available as a fallback. The app keeps access tokens in memory and uses the API's HttpOnly refresh-token cookie to restore sessions.
+At http://localhost:5173, employees can sign in, change a temporary password, check in and out with a photo, view attendance history and profile details, and sign out. Camera access requires HTTPS or localhost. A file picker is available if camera access cannot be used. Access tokens stay in memory; the API's HttpOnly refresh-token cookie restores the session.
 
 The frontend reads `VITE_API_BASE_URL`. Docker Compose sets it to `http://localhost:${PORT_ABSENSI:-3001}/api/v1` for local development; update the `absensi-web` service environment if the API runs at a different origin.
 
 ## HRD monitoring web app
 
-The Monitoring app at http://localhost:5174 is for the bootstrapped HRD administrator. It provides today's attendance counters and seven-day chart, employee search and filtering, create/edit/status/soft-delete actions, one-time password creation and reset, explicitly confirmed login-email changes, and read-only attendance filtering and details. The first login requires changing the bootstrap password. Employee passwords are shown only immediately after creation or reset; copy and deliver them through a secure channel.
+At http://localhost:5174, the bootstrapped HRD administrator can view today's attendance counts and the seven-day chart, search employees, manage accounts, and review attendance. The first sign-in requires a password change. Temporary employee passwords appear only after account creation or reset; copy them and send them through a secure channel.
 
 The frontend reads `VITE_API_BASE_URL`. Docker Compose sets it to `http://localhost:${PORT_MONITORING:-3002}/api/v1` for local development; update the `monitoring-web` service environment if the API runs at a different origin.
 
-## Release readiness and Documentation
+## Release checks
 
 The Swagger UI for each API is available at `/docs` on its API origin. Before a release, run the service tests and production builds:
 

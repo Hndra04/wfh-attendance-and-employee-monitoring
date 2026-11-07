@@ -31,8 +31,8 @@ export function DashboardPage() {
       <header className="admin-page-heading">
         <div>
           <p className="admin-eyebrow">RINGKASAN HARIAN</p>
-          <h1>Selamat datang kembali.</h1>
-          <p>Pantau aktivitas presensi dan kelola tim Anda.</p>
+          <h1>Ringkasan presensi</h1>
+          <p>Lihat kehadiran tim hari ini dan aktivitas selama tujuh hari terakhir.</p>
         </div>
         <Button variant="secondary" onClick={() => void loadSummary()} disabled={loading}>
           Muat ulang

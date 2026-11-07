@@ -50,9 +50,9 @@ export function LoginPage() {
           </span>
         </div>
         <div className="login-story-copy">
-          <p className="eyebrow-light">Mulai hari kerja dengan lebih teratur</p>
-          <h1>Presensi kerja Anda, tercatat.</h1>
-          <p>Lakukan presensi dengan aman, lihat riwayat kehadiran, lalu lanjutkan pekerjaan.</p>
+          <p className="eyebrow-light">Presensi kerja dari rumah</p>
+          <h1>Catat kehadiran hari ini.</h1>
+          <p>Masuk dengan akun kerja untuk melakukan presensi dan melihat riwayat Anda.</p>
         </div>
         <div className="login-time-card">
           <span className="time-indicator" aria-hidden="true" />
