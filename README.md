@@ -18,35 +18,30 @@ This repository contains the initial monorepo boilerplate for the two-scope appl
 The NestJS 12 tooling requires Node.js 22.22.3 or newer; all application Dockerfiles use the Node 22 image.
 
 1. Copy `.env.example` to `.env`.
-2. Set `INITIAL_HRD_ADMIN_EMAIL` and `INITIAL_HRD_ADMIN_PASSWORD` in `.env`. Use a unique password with at least 8 characters. `.env` is ignored by Git; do not commit it.
+2. Set `INITIAL_HRD_ADMIN_EMAIL` and `INITIAL_HRD_ADMIN_PASSWORD` in `.env`. Use a unique password with at least 8 characters. `.env` is ignored by Git; do not commit it. The admin bootstrap runs automatically when you start the Compose stack.
 3. Start MySQL and build the services:
    ```bash
    docker compose up -d mysql
    docker compose build
    ```
-4. Create the initial HRD admin:
-   ```bash
-   docker compose run --rm admin-bootstrap
-   ```
-   The command hashes the password with bcrypt and sets `must_change_password`. It does not print the password and will not overwrite an existing active account.
-5. Start the application containers:
+4. Start the application containers:
    ```bash
    docker compose up --build -d
    ```
-   The one-off `schema-migrate` container runs monitoring migrations first, then attendance migrations; the APIs wait for it to finish successfully.
-6. (Optional) Seed demo employees, accounts, and attendance. Set `DEMO_EMPLOYEE_PASSWORD` in `.env`, then run:
+   The one-off `schema-migrate` container runs monitoring migrations first, then attendance migrations; the APIs wait for it to finish successfully. The `admin-bootstrap` service also applies monitoring migrations, hashes the configured password with bcrypt, and creates the initial admin with `must_change_password` set. It does not print the password or overwrite an existing active account.
+5. (Optional) Seed demo employees, accounts, and attendance. Set `DEMO_EMPLOYEE_PASSWORD` in `.env`, then run:
    ```bash
    docker compose run --rm demo-seed
    ```
    The employee seed is repeat-safe and does not change existing employee or attendance records. Demo employee accounts require a password change on first login.
-7. Access the apps:
+6. Access the apps:
    - Absensi Web: http://localhost:5173
    - Monitoring Web: http://localhost:5174
    - Absensi API: http://localhost:3001/api/v1
    - Monitoring API: http://localhost:3002/api/v1
    - MySQL: localhost:3306
 
-The admin bootstrap applies monitoring migrations before inserting the admin. Migrations are additive and recorded in the shared TypeORM migration table. Do not delete a volume that contains data.
+Migrations are additive and recorded in the shared TypeORM migration table. Do not delete a volume that contains data.
 
 ## Authentication
 
@@ -55,6 +50,12 @@ Both APIs expose `POST /api/v1/auth/login`, `POST /api/v1/auth/refresh`, `POST /
 Set `JWT_ACCESS_TTL` to a duration such as `15m` or `1h`. Set `ABSENSI_WEB_ORIGIN` and `MONITORING_WEB_ORIGIN` when the frontends use non-default origins. `TRUSTED_PROXY_HOPS` defaults to `0`; configure it to the exact number of trusted reverse-proxy hops so login throttling uses the correct client IP. Failed-login limits are held in each API process, so multiple replicas require a shared rate-limit store.
 
 Use unique, high-entropy `JWT_SECRET_ABSENSI` and `JWT_SECRET_MONITORING` values in `.env`; the Compose defaults are for local development only.
+
+## Employee management API
+
+The monitoring API provides HRD-only employee list/search/filter, detail, create, update, status, soft-delete, password-reset, and explicit login-email-change endpoints under `/api/v1/employees`. Creating an employee and resetting a password each return a temporary password once; employees must change it at first login. Change an employee login email with `PATCH /api/v1/employees/{id}/email` and `{ "email": "new@example.test", "confirm": true }`; the employee and login email update in one transaction.
+
+The attendance service can retrieve employee details from `GET /api/v1/internal/employees/{id}` and resolve active IDs from `GET /api/v1/internal/employees/ids?department=...`. These monitoring endpoints require the `x-internal-service-token` header set to `INTERNAL_SERVICE_TOKEN`.
 
 ## Attendance API
 
@@ -99,7 +100,7 @@ docker compose logs -f absensi-service
 
 ## Current status
 
-Sprints 0–3 (Foundation, Data foundation, Authentication, and Attendance API) are complete. Both APIs have role-specific authentication, refresh-token rotation, and guarded profile/password endpoints; the Absensi API has automated attendance tests and has been smoke-tested in Docker for photo check-in/out, ownership, and duplicate protection.
+Sprints 0–4 (Foundation, Data foundation, Authentication, Attendance API, and Employee management API) are complete. Employee management includes HRD CRUD, account creation/reset, email confirmation, and service-token-protected internal lookups. Both APIs have role-specific authentication, refresh-token rotation, and guarded profile/password endpoints; the Absensi API has automated attendance tests and has been smoke-tested in Docker for photo check-in/out, ownership, and duplicate protection.
 
 ## Notes
 

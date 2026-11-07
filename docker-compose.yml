@@ -93,7 +93,6 @@ services:
       - '${PORT_MONITORING:-3002}:${PORT_MONITORING:-3002}'
 
   admin-bootstrap:
-    profiles: ["tools"]
     build:
       context: .
       dockerfile: packages/monitoring-service/Dockerfile
@@ -112,6 +111,7 @@ services:
     command: ["npm", "run", "bootstrap:admin"]
 
   demo-seed:
+    profiles: ["tools"]
     build:
       context: .
       dockerfile: packages/monitoring-service/Dockerfile
