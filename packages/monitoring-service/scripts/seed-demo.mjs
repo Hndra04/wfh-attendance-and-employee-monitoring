@@ -4,9 +4,10 @@ import mysql from 'mysql2/promise';
 import { ulid } from 'ulid';
 
 const password = process.env.DEMO_EMPLOYEE_PASSWORD;
+const alphanumericRegex = /^[a-zA-Z0-9]+$/;
 
-if (!password || password.length < 12 || Buffer.byteLength(password, 'utf8') > 72) {
-  throw new Error('Set DEMO_EMPLOYEE_PASSWORD to a password of 12–72 UTF-8 bytes.');
+if (!password || password.length < 8 || !alphanumericRegex.test(password)) {
+  throw new Error('Set DEMO_EMPLOYEE_PASSWORD to a password of at least 8 alphanumeric characters.');
 }
 
 const employees = JSON.parse(

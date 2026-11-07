@@ -36,8 +36,7 @@ The NestJS 12 tooling requires Node.js 22.22.3 or newer; all application Dockerf
    The one-off `schema-migrate` container runs monitoring migrations first, then attendance migrations; the APIs wait for it to finish successfully.
 6. (Optional) Seed demo employees, accounts, and attendance. Set `DEMO_EMPLOYEE_PASSWORD` in `.env`, then run:
    ```bash
-   docker compose run --rm monitoring-demo-seed
-   docker compose run --rm absensi-service npm run seed:demo
+   docker compose run --rm demo-seed
    ```
    The employee seed is repeat-safe and does not change existing employee or attendance records. Demo employee accounts require a password change on first login.
 7. Access the apps:
@@ -96,12 +95,7 @@ docker compose build absensi-service
 
 # View logs
 docker compose logs -f absensi-service
-
-# Seed 50 sample attendance rows for a small-scale smoke test (create an empty, separately granted DB ending in _perf first)
-docker compose run --rm -e DB_NAME=wfh_attendance_perf monitoring-service npm run db:migrate
-docker compose run --rm -e DB_NAME=wfh_attendance_perf -e PERFORMANCE_SEED_CONFIRM=YES absensi-service npm run seed:performance
 ```
-It refuses to run unless the selected database ends in `_perf` and has an empty attendance table. This small seed is for development smoke tests, not for validating the PRD's production performance target.
 
 ## Current status
 

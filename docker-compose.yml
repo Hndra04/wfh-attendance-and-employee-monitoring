@@ -111,23 +111,26 @@ services:
         condition: service_healthy
     command: ["npm", "run", "bootstrap:admin"]
 
-  monitoring-demo-seed:
-    profiles: ["tools"]
+  demo-seed:
     build:
       context: .
       dockerfile: packages/monitoring-service/Dockerfile
-    container_name: wfh-attendance-monitoring-demo-seed
+    restart: "no"
+    working_dir: /app
     environment:
       DB_HOST: mysql
       DB_PORT: 3306
       DB_NAME: ${MYSQL_DATABASE:-wfh_attendance_db}
       DB_USER: ${MYSQL_USER:-wfh_attendance_user}
       DB_PASSWORD: ${MYSQL_PASSWORD:-wfh_attendance_password}
-      DEMO_EMPLOYEE_PASSWORD: ${DEMO_EMPLOYEE_PASSWORD:-}
+      DEMO_EMPLOYEE_PASSWORD: ${DEMO_EMPLOYEE_PASSWORD}
     depends_on:
       schema-migrate:
         condition: service_completed_successfully
-    command: ["npm", "run", "seed:demo"]
+    command:
+      - sh
+      - -c
+      - node packages/monitoring-service/scripts/seed-demo.mjs && node packages/absensi-service/scripts/seed-demo.mjs
 
   absensi-web:
     build:

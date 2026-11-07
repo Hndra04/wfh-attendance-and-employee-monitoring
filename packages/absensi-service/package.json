@@ -11,8 +11,7 @@
     "db:migrate": "typeorm-ts-node-commonjs migration:run -d src/database/migration-data-source.ts",
     "db:migrate:revert": "typeorm-ts-node-commonjs migration:revert -d src/database/migration-data-source.ts",
     "db:migration:generate": "typeorm-ts-node-commonjs migration:generate",
-    "seed:demo": "npm run db:migrate && node scripts/seed-demo.mjs",
-    "seed:performance": "npm run db:migrate && node scripts/seed-performance.mjs"
+    "seed:demo": "npm run db:migrate && node scripts/seed-demo.mjs"
   },
   "dependencies": {
     "@nestjs/common": "^12.4.0",
