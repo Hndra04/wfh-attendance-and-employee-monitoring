@@ -1,23 +1,23 @@
 :root {
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  color: #17243b;
-  background: #f4f6f9;
+  color: #292522;
+  background: #f7f5f2;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
-  --admin-ink: #17243b;
-  --admin-muted: #68758a;
-  --admin-line: #e0e6ed;
-  --admin-blue: #1d4ed8;
-  --admin-blue-hover: #1942b5;
-  --admin-blue-soft: #edf3ff;
-  --admin-panel: #fff;
-  --admin-bg: #f4f6f9;
-  --ui-accent: #1d4ed8;
-  --ui-accent-hover: #1942b5;
-  --ui-focus: #164e9b;
-  --ui-border: #cbd4df;
-  --ui-muted: #68758a;
-  --ui-surface: #fff;
+  --admin-ink: #292522;
+  --admin-muted: #655e59;
+  --admin-line: #e6dfd8;
+  --admin-blue: #a32130;
+  --admin-blue-hover: #851b28;
+  --admin-blue-soft: #fbeded;
+  --admin-panel: #fffefc;
+  --admin-bg: #f7f5f2;
+  --ui-accent: #a32130;
+  --ui-accent-hover: #851b28;
+  --ui-focus: #871d2a;
+  --ui-border: #e6dfd8;
+  --ui-muted: #655e59;
+  --ui-surface: #fffefc;
 }
 
 * {
@@ -771,23 +771,21 @@ select {
   flex-direction: column;
   justify-content: space-between;
   padding: clamp(30px, 5vw, 72px);
-  color: #fff;
-  background:
-    radial-gradient(ellipse at 82% 18%, rgb(101 153 255 / 24%), transparent 34%),
-    linear-gradient(145deg, #102858 0%, #163b7d 52%, #1b4e9a 100%);
+  color: var(--admin-ink);
+  background: #f0e9e4;
 }
 
 .admin-brand--light {
-  color: #fff;
+  color: var(--admin-ink);
 }
 
 .admin-brand--light .admin-brand-mark {
-  color: #16386f;
-  background: #fff;
+  color: #fff;
+  background: var(--admin-blue);
 }
 
 .admin-brand--light small {
-  color: #c9d7f0;
+  color: var(--admin-muted);
 }
 
 .admin-login-copy {
@@ -797,7 +795,7 @@ select {
 
 .admin-eyebrow-light {
   margin: 0 0 16px;
-  color: #b9d1ff;
+  color: #811b27;
   font-size: 0.78rem;
   font-weight: 750;
   letter-spacing: 0.1em;
@@ -814,13 +812,13 @@ select {
 .admin-login-copy > p:last-child {
   max-width: 400px;
   margin-top: 20px;
-  color: #d3def2;
+  color: #514a45;
   font-size: 1.03rem;
   line-height: 1.65;
 }
 
 .admin-login-foot {
-  color: #c9d7f0;
+  color: var(--admin-muted);
   font-size: 0.82rem;
 }
 
@@ -1125,5 +1123,312 @@ select {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+.admin-sidebar {
+  border-right-color: var(--admin-line);
+  background: #fffefc;
+  box-shadow: 8px 0 28px rgb(46 32 25 / 3%);
+}
+
+.admin-brand-mark {
+  border-radius: 11px;
+  background: var(--admin-blue);
+}
+
+.admin-navigation {
+  gap: 5px;
+}
+
+.admin-nav-link {
+  position: relative;
+  min-height: 48px;
+  border-radius: 8px;
+  color: #5d5651;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+.admin-nav-link .ui-icon {
+  width: 19px;
+  height: 19px;
+  color: #756d67;
+}
+
+.admin-nav-link:hover,
+.admin-nav-link.is-active {
+  color: #851b28;
+  background: #fbeded;
+}
+
+.admin-nav-link.is-active {
+  font-weight: 700;
+}
+
+.admin-nav-link.is-active .ui-icon {
+  color: var(--admin-blue);
+}
+
+.admin-avatar,
+.employee-row-avatar {
+  color: #851b28;
+  background: #f6e5e5;
+}
+
+.admin-main {
+  background: var(--admin-bg);
+}
+
+.admin-content {
+  width: min(100% - 72px, 1280px);
+  padding-block: 48px 72px;
+}
+
+.admin-page-heading {
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.admin-page-heading h1 {
+  color: #26211e;
+  font-size: clamp(1.9rem, 3vw, 2.4rem);
+  font-weight: 680;
+}
+
+.admin-page-heading > div > p:last-child {
+  margin-top: 8px;
+  line-height: 1.5;
+}
+
+.admin-eyebrow {
+  color: #8d292f;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+}
+
+.admin-panel,
+.summary-card,
+.admin-date-strip,
+.attendance-detail-times > div,
+.attendance-photo-panel {
+  border-color: var(--admin-line);
+  border-radius: 11px;
+  background: #fffefc;
+  box-shadow: 0 3px 14px rgb(46 32 25 / 4%);
+}
+
+.admin-panel {
+  padding: 24px;
+}
+
+.admin-date-strip {
+  padding: 16px 18px;
+}
+
+.admin-date-mark {
+  border-radius: 9px;
+  color: #8f1f2c;
+  background: #fbeded;
+}
+
+.summary-grid {
+  gap: 16px;
+}
+
+.summary-card {
+  padding: 21px;
+}
+
+.summary-card-top {
+  color: #5f5752;
+}
+
+.summary-card--blue .summary-card-dot,
+.chart-legend i {
+  background: #a32130;
+}
+
+.chart-panel {
+  padding: 24px 24px 16px;
+}
+
+.chart-panel h2,
+.employee-list-heading h2 {
+  color: #2b2522;
+  letter-spacing: -0.035em;
+}
+
+.chart-grid-line {
+  stroke: #ece6e0;
+}
+
+.chart-bar {
+  fill: #a32130;
+}
+
+.chart-bar:hover {
+  fill: #851b28;
+}
+
+.chart-date {
+  fill: #655e59;
+}
+
+.chart-value {
+  fill: #3a332f;
+}
+
+.employee-filters,
+.attendance-filters {
+  border-bottom-color: var(--admin-line);
+  background: #faf8f5;
+}
+
+.employee-list-heading {
+  padding-top: 22px;
+}
+
+.employee-list-panel .ui-table-wrap,
+.attendance-list-panel .ui-table-wrap {
+  border-top-color: var(--admin-line);
+}
+
+.employee-list-panel .ui-table th,
+.attendance-list-panel .ui-table th {
+  color: #5d5550;
+  background: #f7f4f0;
+}
+
+.employee-list-panel .ui-table td,
+.attendance-list-panel .ui-table td {
+  padding-block: 15px;
+}
+
+.employee-list-panel .ui-table tbody tr:hover,
+.attendance-list-panel .ui-table tbody tr:hover {
+  background: #fcfaf8;
+}
+
+.employee-actions {
+  gap: 6px;
+}
+
+.employee-actions .ui-button {
+  min-height: 44px;
+}
+
+.admin-table-link,
+.admin-back-link {
+  color: #8a1e2b;
+}
+
+.attendance-thumbnail,
+.attendance-detail-photo {
+  background: #f0ece8;
+}
+
+.admin-login {
+  background: #fffefc;
+}
+
+.admin-login-panel {
+  background: #fffefc;
+}
+
+.admin-login-copy h1 {
+  max-width: 530px;
+  color: #2b2522;
+  font-weight: 680;
+}
+
+.admin-login-copy > p:last-child {
+  line-height: 1.7;
+}
+
+.admin-login-form .admin-eyebrow,
+.admin-password-card .admin-eyebrow {
+  color: #8f1f2c;
+}
+
+.admin-login-form .ui-label,
+.admin-password-card .ui-label {
+  color: #39332f;
+}
+
+.admin-login-form .ui-input,
+.admin-password-card .ui-input {
+  border-color: #c9c0b9;
+  border-radius: 8px;
+}
+
+.admin-login-form .ui-input:focus-visible,
+.admin-password-card .ui-input:focus-visible {
+  border-color: var(--admin-blue);
+}
+
+.admin-login-form .ui-button--primary,
+.admin-password-card .ui-button--primary {
+  background: var(--admin-blue);
+}
+
+.admin-login-form .ui-button--primary:hover:not(:disabled),
+.admin-password-card .ui-button--primary:hover:not(:disabled) {
+  background: #851b28;
+}
+
+.admin-password-card {
+  border-color: var(--admin-line);
+  border-radius: 12px;
+  background: #fffefc;
+  box-shadow: 0 8px 28px rgb(46 32 25 / 6%);
+}
+
+.ui-table-wrap {
+  border-radius: 8px;
+}
+
+@media (max-width: 760px) {
+  .admin-content {
+    width: min(100% - 32px, 680px);
+    padding-block: 28px 40px;
+  }
+
+  .admin-sidebar {
+    border-top-color: var(--admin-line);
+    border-radius: 14px 14px 0 0;
+    background: #fffefc;
+    box-shadow: 0 -4px 22px rgb(46 32 25 / 7%);
+  }
+
+  .admin-nav-link,
+  .admin-mobile-logout {
+    min-height: 54px;
+    gap: 3px;
+    font-size: 0.72rem;
+  }
+
+  .admin-nav-link .ui-icon,
+  .admin-mobile-logout .ui-icon {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+@media (max-width: 420px) {
+  .admin-content {
+    width: min(100% - 24px, 680px);
+  }
+
+  .summary-grid {
+    gap: 9px;
+  }
+
+  .summary-card {
+    padding: 15px;
+  }
+
+  .summary-card-top {
+    min-height: 34px;
+    font-size: 0.77rem;
   }
 }

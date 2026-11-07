@@ -1,19 +1,27 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import { Badge, Button, EmptyState, Spinner } from '@wfh-attendance/ui';
+import { Badge, Button, EmptyState, Icon, Spinner } from '@wfh-attendance/ui';
 
 import { apiRequest, getErrorMessage, type AttendanceRecord } from '../api';
+import { useAuth } from '../auth-context';
 import { AuthenticatedPhoto } from '../components/AuthenticatedPhoto';
 import { PhotoCapture } from '../components/PhotoCapture';
 
 type CaptureMode = 'check-in' | 'check-out' | null;
 
 export function TodayPage() {
+  const { user } = useAuth();
   const [attendance, setAttendance] = useState<AttendanceRecord | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [captureMode, setCaptureMode] = useState<CaptureMode>(null);
   const [notice, setNotice] = useState('');
+  const [currentTime, setCurrentTime] = useState(() => new Date());
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   const loadToday = useCallback(async () => {
     setError('');
@@ -53,18 +61,30 @@ export function TodayPage() {
     day: 'numeric',
     timeZone: 'Asia/Jakarta',
   }).format(new Date());
+  const jakartaTime = new Intl.DateTimeFormat('id-ID', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    timeZone: 'Asia/Jakarta',
+  }).format(currentTime);
 
   return (
     <section className="content-page">
       <header className="content-heading">
         <div>
           <p className="eyebrow">RUANG KERJA ANDA</p>
-          <h1>Hari ini</h1>
+          <h1>Halo, {user?.employee?.fullName.split(' ')[0] ?? 'Hari ini'}</h1>
           <p>{jakartaDate} <span className="date-zone">· Jakarta (UTC+7)</span></p>
         </div>
-        <Button variant="secondary" onClick={() => void loadToday()}>
-          Muat ulang
-        </Button>
+        <div className="today-header-actions">
+          <time className="today-clock" dateTime={currentTime.toISOString()}>
+            <Icon name="clock" size={20} />
+            <span><strong>{jakartaTime}</strong><small>WAKTU JAKARTA</small></span>
+          </time>
+          <Button variant="secondary" onClick={() => void loadToday()}>
+            Muat ulang
+          </Button>
+        </div>
       </header>
 
       {notice && (
@@ -109,7 +129,7 @@ export function TodayPage() {
               </>
             ) : (
               <>
-                <div className="check-in-mark" aria-hidden="true">↗</div>
+                <div className="check-in-mark"><Icon name="home" size={24} /></div>
                 <p className="eyebrow">SIAP MEMULAI HARI</p>
                 <h2>Mulai hari kerja Anda</h2>
                 <p className="muted-copy">

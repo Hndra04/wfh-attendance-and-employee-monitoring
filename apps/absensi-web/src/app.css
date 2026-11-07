@@ -1,11 +1,11 @@
 :root {
-  --app-ink: #17233c;
-  --app-muted: #63718a;
-  --app-line: #e2e8f0;
-  --app-blue: #1d4ed8;
-  --app-blue-soft: #edf3ff;
-  --app-panel: #fff;
-  --app-page: #f5f7fb;
+  --app-ink: #292522;
+  --app-muted: #655e59;
+  --app-line: #e6dfd8;
+  --app-blue: #a32130;
+  --app-blue-soft: #fbeded;
+  --app-panel: #fffefc;
+  --app-page: #f7f5f2;
 }
 
 body {
@@ -705,23 +705,21 @@ input {
   flex-direction: column;
   justify-content: space-between;
   padding: clamp(30px, 5vw, 72px);
-  color: #fff;
-  background:
-    radial-gradient(ellipse at 82% 18%, rgb(101 153 255 / 24%), transparent 34%),
-    linear-gradient(145deg, #102858 0%, #163b7d 52%, #1b4e9a 100%);
+  color: var(--app-ink);
+  background: #f0e9e4;
 }
 
 .brand-lockup--light {
-  color: #fff;
+  color: var(--app-ink);
 }
 
 .brand-lockup--light .brand-mark {
-  color: #16386f;
-  background: #fff;
+  color: #fff;
+  background: var(--app-blue);
 }
 
 .brand-lockup--light small {
-  color: #c9d7f0;
+  color: var(--app-muted);
 }
 
 .login-story-copy {
@@ -731,7 +729,7 @@ input {
 
 .eyebrow-light {
   margin: 0 0 16px;
-  color: #b9d1ff;
+  color: #811b27;
   font-size: 0.78rem;
   font-weight: 750;
   letter-spacing: 0.11em;
@@ -749,7 +747,7 @@ input {
 .login-story-copy > p:last-child {
   max-width: 400px;
   margin-top: 20px;
-  color: #d3def2;
+  color: #514a45;
   font-size: 1.05rem;
   line-height: 1.65;
 }
@@ -759,15 +757,15 @@ input {
   align-items: center;
   gap: 12px;
   padding-top: 18px;
-  border-top: 1px solid rgb(255 255 255 / 20%);
+  border-top: 1px solid #d6ccc5;
 }
 
 .time-indicator {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #83d6ab;
-  box-shadow: 0 0 0 5px rgb(131 214 171 / 15%);
+  background: #23774e;
+  box-shadow: 0 0 0 5px rgb(35 119 78 / 12%);
 }
 
 .login-time-card strong,
@@ -781,7 +779,7 @@ input {
 
 .login-time-card small {
   margin-top: 4px;
-  color: #c5d3eb;
+  color: var(--app-muted);
   font-size: 0.78rem;
 }
 
@@ -1224,5 +1222,387 @@ input {
   .login-panel .ui-button--primary,
   .password-page .ui-button--primary {
     transition: none;
+  }
+}
+
+.app-sidebar {
+  border-right-color: var(--app-line);
+  background: #fffefc;
+  box-shadow: 8px 0 28px rgb(46 32 25 / 3%);
+}
+
+.brand-mark,
+.loading-mark {
+  border-radius: 11px;
+  background: var(--app-blue);
+}
+
+.brand-lockup strong {
+  letter-spacing: -0.035em;
+}
+
+.app-navigation {
+  gap: 5px;
+}
+
+.app-nav-link {
+  position: relative;
+  min-height: 48px;
+  border-radius: 8px;
+  color: #5d5651;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+.app-nav-link .ui-icon {
+  width: 19px;
+  height: 19px;
+  color: #756d67;
+}
+
+.app-nav-link:hover,
+.app-nav-link.is-active {
+  color: #851b28;
+  background: #fbeded;
+}
+
+.app-nav-link.is-active {
+  font-weight: 700;
+}
+
+.app-nav-link.is-active .ui-icon {
+  color: var(--app-blue);
+}
+
+.sidebar-avatar,
+.profile-avatar {
+  color: #851b28;
+  background: #f6e5e5;
+}
+
+.app-main {
+  background: var(--app-page);
+}
+
+.content-page {
+  width: min(100% - 72px, 1240px);
+  padding-block: 48px 72px;
+}
+
+.content-heading {
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.content-heading h1 {
+  color: #26211e;
+  font-size: clamp(1.9rem, 3vw, 2.4rem);
+  font-weight: 680;
+  letter-spacing: -0.045em;
+}
+
+.content-heading > div > p:last-child {
+  margin-top: 8px;
+  line-height: 1.5;
+}
+
+.content-page .eyebrow {
+  color: #8d292f;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+}
+
+.today-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.today-clock {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 13px;
+  border: 1px solid var(--app-line);
+  border-radius: 9px;
+  background: #fffefc;
+  color: var(--app-blue);
+  font-variant-numeric: tabular-nums;
+}
+
+.today-clock > span {
+  display: grid;
+  gap: 1px;
+}
+
+.today-clock strong {
+  color: var(--app-ink);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.today-clock small {
+  color: var(--app-muted);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.content-page .ui-button {
+  min-height: 44px;
+  border-radius: 8px;
+}
+
+.content-page .ui-button--primary {
+  background: var(--app-blue);
+  box-shadow: 0 2px 6px rgb(120 27 38 / 16%);
+}
+
+.content-page .ui-button--primary:hover:not(:disabled) {
+  background: #851b28;
+  box-shadow: 0 4px 10px rgb(120 27 38 / 20%);
+}
+
+.content-page .ui-button--secondary {
+  border-color: #ded7d1;
+  background: #fffefc;
+}
+
+.content-page .ui-button--secondary:hover:not(:disabled) {
+  background: #f5f0ec;
+}
+
+.today-primary,
+.today-secondary,
+.filter-panel,
+.history-table-panel,
+.profile-card,
+.detail-note {
+  border-color: var(--app-line);
+  border-radius: 12px;
+  background: #fffefc;
+  box-shadow: 0 3px 14px rgb(46 32 25 / 4%);
+}
+
+.today-primary {
+  min-height: 340px;
+  padding: clamp(26px, 3.2vw, 40px);
+}
+
+.today-primary h2,
+.panel-title h2 {
+  color: #292522;
+  letter-spacing: -0.035em;
+}
+
+.check-in-mark {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  color: #8f1f2c;
+  background: #fbeded;
+}
+
+.today-primary > .ui-button {
+  min-width: 190px;
+  min-height: 50px;
+  padding-inline: 22px;
+  font-size: 0.96rem;
+}
+
+.time-card {
+  border-color: #eae4de;
+  border-radius: 9px;
+  background: #f9f7f4;
+}
+
+.time-card span,
+.time-card small,
+.panel-title .eyebrow {
+  color: #6b625d;
+}
+
+.note-block {
+  border-left-color: #c85c62;
+}
+
+.attendance-photo {
+  border-radius: 9px;
+  background: #f0ece8;
+}
+
+.photo-placeholder {
+  color: #5c5550;
+  background: #f1ede9;
+}
+
+.filter-panel {
+  gap: 16px;
+  padding: 22px;
+}
+
+.history-table-panel {
+  padding: 12px;
+}
+
+.history-table-panel .ui-table th {
+  color: #5e5752;
+  background: #f7f4f0;
+}
+
+.history-table-panel .ui-table tbody tr:hover {
+  background: #fcfaf8;
+}
+
+.table-link,
+.back-link {
+  color: #8a1e2b;
+}
+
+.history-thumbnail {
+  border-radius: 7px;
+  background: #f0ece8;
+}
+
+.detail-summary > div,
+.detail-photo-panel {
+  border-color: var(--app-line);
+  border-radius: 10px;
+  background: #fffefc;
+}
+
+.detail-photo {
+  background: #f1ede9;
+}
+
+.profile-card {
+  padding: clamp(24px, 4vw, 40px);
+}
+
+.profile-header {
+  border-bottom-color: var(--app-line);
+}
+
+.profile-note {
+  border-top-color: var(--app-line);
+}
+
+.login-layout {
+  background: #fffefc;
+}
+
+.login-panel {
+  background: #fffefc;
+}
+
+.login-story-copy h1 {
+  max-width: 520px;
+  color: #2b2522;
+  font-weight: 680;
+}
+
+.login-story-copy > p:last-child {
+  line-height: 1.7;
+}
+
+.login-form-wrap .eyebrow,
+.password-card .eyebrow {
+  color: #8f1f2c;
+}
+
+.login-panel .ui-label,
+.password-page .ui-label {
+  color: #39332f;
+}
+
+.login-panel .ui-input,
+.password-page .ui-input {
+  border-color: #c9c0b9;
+  border-radius: 8px;
+}
+
+.login-panel .ui-input:focus-visible,
+.password-page .ui-input:focus-visible {
+  border-color: var(--app-blue);
+}
+
+.login-panel .ui-button--primary,
+.password-page .ui-button--primary {
+  background: var(--app-blue);
+}
+
+.login-panel .ui-button--primary:hover:not(:disabled),
+.password-page .ui-button--primary:hover:not(:disabled) {
+  background: #851b28;
+}
+
+.password-card {
+  border-color: var(--app-line);
+  border-radius: 12px;
+  background: #fffefc;
+  box-shadow: 0 8px 28px rgb(46 32 25 / 6%);
+}
+
+.password-icon {
+  border-radius: 12px;
+  color: #8f1f2c;
+  background: #fbeded;
+}
+
+.capture-preview img,
+.camera-frame {
+  border-radius: 10px;
+}
+
+@media (max-width: 760px) {
+  .content-page {
+    width: min(100% - 32px, 680px);
+    padding-block: 28px 40px;
+  }
+
+  .content-heading {
+    align-items: flex-start;
+  }
+
+  .today-header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .app-sidebar {
+    border-top-color: var(--app-line);
+    border-radius: 14px 14px 0 0;
+    background: #fffefc;
+    box-shadow: 0 -4px 22px rgb(46 32 25 / 7%);
+  }
+
+  .app-nav-link {
+    min-height: 54px;
+    gap: 3px;
+    font-size: 0.72rem;
+  }
+
+  .app-nav-link .ui-icon {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+@media (max-width: 420px) {
+  .content-page {
+    width: min(100% - 24px, 680px);
+  }
+
+  .today-header-actions {
+    gap: 8px;
+  }
+
+  .today-clock {
+    min-height: 44px;
+    padding-inline: 9px;
+  }
+
+  .today-header-actions > .ui-button {
+    padding-inline: 11px;
   }
 }

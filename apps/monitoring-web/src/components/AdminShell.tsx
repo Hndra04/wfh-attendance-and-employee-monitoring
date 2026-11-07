@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 
-import { Button } from '@wfh-attendance/ui';
+import { Button, Icon } from '@wfh-attendance/ui';
 
 import { useAuth } from '../auth-context';
 
@@ -37,13 +37,13 @@ export function AdminShell() {
         </Link>
         <nav className="admin-navigation" aria-label="Navigasi utama">
           <NavLink to="/" end className={({ isActive }) => navigationClass(isActive)}>
-            <span aria-hidden="true">▦</span>Ringkasan
+            <Icon name="grid" />Ringkasan
           </NavLink>
           <NavLink to="/employees" className={({ isActive }) => navigationClass(isActive)}>
-            <span aria-hidden="true">♙</span>Karyawan
+            <Icon name="users" />Karyawan
           </NavLink>
           <NavLink to="/attendance" className={({ isActive }) => navigationClass(isActive)}>
-            <span aria-hidden="true">◷</span>Presensi
+            <Icon name="clock" />Presensi
           </NavLink>
           <Button
             variant="ghost"
@@ -51,7 +51,7 @@ export function AdminShell() {
             disabled={isLoggingOut}
             onClick={() => void handleLogout()}
           >
-            <span aria-hidden="true">↗</span>Keluar
+            <Icon name="logout" />Keluar
           </Button>
         </nav>
         <div className="admin-user">
@@ -66,7 +66,7 @@ export function AdminShell() {
             disabled={isLoggingOut}
             onClick={() => void handleLogout()}
           >
-            ↗
+            <Icon name="logout" />
           </Button>
         </div>
       </aside>
