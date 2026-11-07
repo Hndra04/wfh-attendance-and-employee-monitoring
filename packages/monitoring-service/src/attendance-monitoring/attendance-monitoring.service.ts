@@ -80,7 +80,10 @@ export class AttendanceMonitoringService {
     stream: Readable;
     contentType: string;
   }> {
-    const response = await this.fetch(`${this.absensiUrl}/internal/attendances/${encodeURIComponent(id)}/photos/${encodeURIComponent(kind)}`);
+    const response = await this.fetch(
+      `${this.absensiUrl}/internal/attendances/${encodeURIComponent(id)}/photos/${encodeURIComponent(kind)}`,
+      { headers: { 'x-internal-service-token': this.token } },
+    );
     if (!response.ok) {
       await this.throwForResponse(response);
     }

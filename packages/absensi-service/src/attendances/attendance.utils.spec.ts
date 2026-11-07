@@ -7,6 +7,7 @@ import {
   getJakartaDate,
   isLateCheckIn,
   parseWorkStartTime,
+  toDateKey,
 } from './attendance.utils';
 
 describe('attendance utilities', () => {
@@ -39,5 +40,12 @@ describe('attendance utilities', () => {
         new Date('2026-11-06T10:30:00Z'),
       ),
     ).toBe(510);
+  });
+
+  it('normalizes MySQL DATE objects and strings into YYYY-MM-DD keys', () => {
+    expect(toDateKey(new Date('2026-11-07T00:00:00.000Z'))).toBe('2026-11-07');
+    expect(toDateKey('2026-11-07')).toBe('2026-11-07');
+    expect(toDateKey('2026-11-07T00:00:00.000Z')).toBe('2026-11-07');
+    expect(() => toDateKey('Sat Nov 07')).toThrow(BadRequestException);
   });
 });

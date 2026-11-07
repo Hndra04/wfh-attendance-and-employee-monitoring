@@ -24,6 +24,7 @@ import {
   getJakartaDate,
   isLateCheckIn,
   parseWorkStartTime,
+  toDateKey,
 } from './attendance.utils';
 
 interface AttendanceListMeta {
@@ -286,7 +287,7 @@ export class AttendancesService {
 
     const rows = await this.attendances
       .createQueryBuilder('attendance')
-      .select('attendance.attendanceDate', 'date')
+      .select("DATE_FORMAT(attendance.attendance_date, '%Y-%m-%d')", 'date')
       .addSelect('COUNT(*)', 'total')
       .addSelect('SUM(CASE WHEN attendance.status = :present THEN 1 ELSE 0 END)', 'present')
       .addSelect('SUM(CASE WHEN attendance.status = :late THEN 1 ELSE 0 END)', 'late')
@@ -297,11 +298,11 @@ export class AttendancesService {
       })
       .groupBy('attendance.attendanceDate')
       .orderBy('attendance.attendanceDate', 'ASC')
-      .getRawMany<{ date: string; total: string; present: string; late: string }>();
+      .getRawMany<{ date: string | Date; total: string; present: string; late: string }>();
 
     const totalsByDate = new Map(
       rows.map((row) => [
-        String(row.date).slice(0, 10),
+        toDateKey(row.date),
         { total: Number(row.total), present: Number(row.present), late: Number(row.late) },
       ]),
     );

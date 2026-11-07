@@ -269,6 +269,8 @@ describe('AttendancesService', () => {
       orderBy: vi.fn().mockReturnThis(),
       getRawMany: vi.fn().mockResolvedValue([
         { date: '2026-11-03', total: '2', present: '1', late: '1' },
+        // mysql2 may return DATE columns as Date objects in raw queries
+        { date: new Date('2026-11-07T00:00:00.000Z'), total: '4', present: '3', late: '1' },
       ]),
     };
     attendances.createQueryBuilder.mockReturnValue(queryBuilder);
@@ -285,6 +287,12 @@ describe('AttendancesService', () => {
       date: '2026-11-03',
       total: 2,
       present: 1,
+      late: 1,
+    });
+    expect(result.data[6]).toEqual({
+      date: '2026-11-07',
+      total: 4,
+      present: 3,
       late: 1,
     });
     await expect(

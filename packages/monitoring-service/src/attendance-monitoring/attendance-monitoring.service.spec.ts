@@ -112,4 +112,30 @@ describe('AttendanceMonitoringService', () => {
       BadRequestException,
     );
   });
+
+  it('proxies attendance photos with the internal service token', async () => {
+    const body = new ReadableStream({
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode('fake-photo'));
+        controller.close();
+      },
+    });
+    const fetch = vi.fn().mockResolvedValue(
+      new Response(body, {
+        status: 200,
+        headers: { 'content-type': 'image/jpeg' },
+      }),
+    );
+    vi.stubGlobal('fetch', fetch);
+
+    const photo = await service.getPhoto('attendance-1', 'check-in');
+
+    expect(fetch).toHaveBeenCalledWith(
+      'http://absensi.test/api/v1/internal/attendances/attendance-1/photos/check-in',
+      expect.objectContaining({
+        headers: { 'x-internal-service-token': 'test-internal-token' },
+      }),
+    );
+    expect(photo.contentType).toBe('image/jpeg');
+  });
 });

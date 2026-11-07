@@ -41,6 +41,20 @@ export function assertDateRange(from?: string, to?: string): void {
   }
 }
 
+/** Normalize MySQL DATE values from raw queries into YYYY-MM-DD keys. */
+export function toDateKey(value: unknown): string {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return value.toISOString().slice(0, 10);
+  }
+  if (typeof value === 'string') {
+    const match = /^(\d{4}-\d{2}-\d{2})/.exec(value);
+    if (match) {
+      return match[1];
+    }
+  }
+  throw new BadRequestException('Attendance date value is invalid.');
+}
+
 export function getDurationMinutes(checkInAt: Date | null, checkOutAt: Date | null): number | null {
   if (!checkInAt || !checkOutAt) {
     return null;
