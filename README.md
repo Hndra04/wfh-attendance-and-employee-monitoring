@@ -1,4 +1,4 @@
-"# WFH Attendance & Employee Monitoring
+# WFH Attendance & Employee Monitoring
 
 This repository contains the initial monorepo boilerplate for the two-scope application described in the PRD:
 
@@ -99,6 +99,16 @@ The Monitoring app at http://localhost:5174 is for the bootstrapped HRD administ
 
 The frontend reads `VITE_API_BASE_URL`. Docker Compose sets it to `http://localhost:${PORT_MONITORING:-3002}/api/v1` for local development; update the `monitoring-web` service environment if the API runs at a different origin.
 
+## Release readiness and Documentation
+
+The Swagger UI for each API is available at `/docs` on its API origin. Before a release, run the service tests and production builds:
+
+```bash
+npm test --workspace=@wfh-attendance/absensi-service
+npm test --workspace=@wfh-attendance/monitoring-service
+npm run build
+```
+
 ## TypeORM entities and migrations
 
 Database models are TypeORM entities in each service's `src/database/entities` directory. Migrations are generated from those entities and reviewed before applying. Run monitoring migrations first on the shared database, then generate attendance migrations; attendance includes matching reference entities to preserve shared-table foreign keys without owning those tables:
@@ -127,5 +137,3 @@ docker compose build absensi-service
 # View logs
 docker compose logs -f absensi-service
 ```
-
-"

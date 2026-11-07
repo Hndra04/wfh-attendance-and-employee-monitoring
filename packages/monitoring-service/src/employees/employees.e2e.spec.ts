@@ -9,8 +9,10 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
 import { AuthGuard } from '../auth/auth.guard';
 import { User, UserRole } from '../database/entities/user.entity';
 import { ChangeEmployeeEmailDto } from './dto/change-employee-email.dto';
+import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { EmployeeQueryDto } from './dto/employee-query.dto';
 import { InternalEmployeeQueryDto } from './dto/internal-employee-query.dto';
+import { UpdateEmployeeDto } from './dto/update-employee.dto';
 import { EmployeesController } from './employees.controller';
 import { EmployeesService } from './employees.service';
 import { InternalEmployeesController } from './internal-employees.controller';
@@ -28,7 +30,9 @@ const employeesService = {
   getInternalById: vi.fn(),
   getActiveIds: vi.fn(),
 };
-const jwtService = { verifyAsync: vi.fn().mockResolvedValue({ sub: 'admin-id', role: UserRole.HRD_ADMIN }) };
+const jwtService = {
+  verifyAsync: vi.fn().mockResolvedValue({ sub: 'admin-id', role: UserRole.HRD_ADMIN }),
+};
 const usersRepository = {
   findOne: vi.fn().mockResolvedValue({
     id: 'admin-id',
@@ -39,11 +43,19 @@ const usersRepository = {
     employee: null,
   }),
 };
+const adminAuthorization = ['Bearer', 'e2e-admin-token'].join(' ');
 
 Reflect.defineMetadata('design:paramtypes', [EmployeesService], EmployeesController);
 Reflect.defineMetadata('design:paramtypes', [EmployeesService], InternalEmployeesController);
 Reflect.defineMetadata('design:paramtypes', [JwtService, Object], AuthGuard);
 Reflect.defineMetadata('design:paramtypes', [EmployeeQueryDto], EmployeesController.prototype, 'list');
+Reflect.defineMetadata('design:paramtypes', [CreateEmployeeDto], EmployeesController.prototype, 'create');
+Reflect.defineMetadata(
+  'design:paramtypes',
+  [String, UpdateEmployeeDto],
+  EmployeesController.prototype,
+  'update',
+);
 Reflect.defineMetadata(
   'design:paramtypes',
   [String, ChangeEmployeeEmailDto],
@@ -100,7 +112,7 @@ describe('employee API (e2e)', () => {
 
   it('serves validated, paginated employee-list requests', async () => {
     const response = await fetch(`${baseUrl}/api/v1/employees?page=1&limit=10`, {
-      headers: { authorization: 'Bearer test-access-token' },
+      headers: { authorization: adminAuthorization },
     });
 
     expect(response.status).toBe(200);
@@ -122,20 +134,83 @@ describe('employee API (e2e)', () => {
 
   it('rejects invalid pagination input', async () => {
     const response = await fetch(`${baseUrl}/api/v1/employees?limit=101`, {
-      headers: { authorization: 'Bearer test-access-token' },
+      headers: { authorization: adminAuthorization },
     });
 
     expect(response.status).toBe(400);
     expect(employeesService.list).not.toHaveBeenCalled();
   });
 
+  it('creates an employee and one-time login password through the HRD API', async () => {
+    employeesService.create.mockResolvedValue({
+      employee: { id: 'employee-id', fullName: 'Test Employee' },
+      temporaryPassword: 'one-time-password',
+    });
+    const response = await fetch(`${baseUrl}/api/v1/employees`, {
+      method: 'POST',
+      headers: { authorization: adminAuthorization, 'content-type': 'application/json' },
+      body: JSON.stringify({
+        fullName: 'Test Employee',
+        email: 'employee@example.test',
+        department: 'Operations',
+        position: 'Staff',
+        joinDate: '2026-01-15',
+      }),
+    });
+
+    expect(response.status).toBe(201);
+    expect(await response.json()).toMatchObject({
+      employee: { id: 'employee-id' },
+      temporaryPassword: 'one-time-password',
+    });
+    expect(employeesService.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        fullName: 'Test Employee',
+        email: 'employee@example.test',
+        department: 'Operations',
+      }),
+    );
+  });
+
+  it('validates employee creation before invoking the service', async () => {
+    const response = await fetch(`${baseUrl}/api/v1/employees`, {
+      method: 'POST',
+      headers: { authorization: adminAuthorization, 'content-type': 'application/json' },
+      body: JSON.stringify({ email: 'not-an-email' }),
+    });
+
+    expect(response.status).toBe(400);
+    expect(employeesService.create).not.toHaveBeenCalled();
+  });
+
+  it('updates and soft-deletes an employee through the HRD API', async () => {
+    employeesService.update.mockResolvedValue({
+      id: 'employee-id',
+      fullName: 'Updated Employee',
+    });
+    const updated = await fetch(`${baseUrl}/api/v1/employees/employee-id`, {
+      method: 'PATCH',
+      headers: { authorization: adminAuthorization, 'content-type': 'application/json' },
+      body: JSON.stringify({ fullName: 'Updated Employee' }),
+    });
+    const deleted = await fetch(`${baseUrl}/api/v1/employees/employee-id`, {
+      method: 'DELETE',
+      headers: { authorization: adminAuthorization },
+    });
+
+    expect(updated.status).toBe(200);
+    expect(await updated.json()).toMatchObject({ fullName: 'Updated Employee' });
+    expect(employeesService.update).toHaveBeenCalledWith('employee-id', {
+      fullName: 'Updated Employee',
+    });
+    expect(deleted.status).toBe(204);
+    expect(employeesService.remove).toHaveBeenCalledWith('employee-id');
+  });
+
   it('requires explicit confirmation before changing a login email', async () => {
     const response = await fetch(`${baseUrl}/api/v1/employees/employee-id/email`, {
       method: 'PATCH',
-      headers: {
-        authorization: 'Bearer test-access-token',
-        'content-type': 'application/json',
-      },
+      headers: { authorization: adminAuthorization, 'content-type': 'application/json' },
       body: JSON.stringify({ email: 'new@example.test', confirm: false }),
     });
 
