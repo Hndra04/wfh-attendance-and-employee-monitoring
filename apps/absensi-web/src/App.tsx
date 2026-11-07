@@ -1,39 +1,58 @@
-import { useState } from 'react';
+import { Navigate, Outlet, Route, Routes } from 'react-router-dom';
 
-import { Badge, Button, EmptyState, Toast } from '@wfh-attendance/ui';
+import { ProtectedRoute } from '@wfh-attendance/ui';
+
+import { AuthProvider, useAuth } from './auth-context';
+import { AppShell } from './components/AppShell';
+import { AttendanceDetailPage } from './pages/AttendanceDetailPage';
+import { ChangePasswordPage } from './pages/ChangePasswordPage';
+import { HistoryPage } from './pages/HistoryPage';
+import { LoginPage } from './pages/LoginPage';
+import { ProfilePage } from './pages/ProfilePage';
+import { TodayPage } from './pages/TodayPage';
 
 export default function App() {
-  const [noticeVisible, setNoticeVisible] = useState(false);
+  return (
+    <AuthProvider>
+      <EmployeeRoutes />
+    </AuthProvider>
+  );
+}
+
+function EmployeeRoutes() {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <main className="auth-loading">
+        <span className="loading-mark" aria-hidden="true">A</span>
+        <p>Memulihkan sesi Anda…</p>
+      </main>
+    );
+  }
 
   return (
-    <main className="ui-page">
-      <header className="ui-page-header">
-        <div>
-          <p className="ui-eyebrow">Absensi WFH</p>
-          <h1>Employee attendance</h1>
-          <p>Shared, accessible UI components are ready for the employee experience.</p>
-        </div>
-        <Badge tone="success">Foundation ready</Badge>
-      </header>
-      <section className="ui-card">
-        <h2>Attendance</h2>
-        <p>Your attendance activity will appear here.</p>
-        <div className="ui-demo-actions">
-          <Button onClick={() => setNoticeVisible(true)}>Preview notification</Button>
-          <Badge>Ready for check-in flow</Badge>
-        </div>
-        <EmptyState
-          title="No attendance yet"
-          description="Check-in history will appear here once you start your workday."
-        />
-      </section>
-      {noticeVisible && (
-        <Toast
-          message="Shared notification component is working."
-          tone="success"
-          onDismiss={() => setNoticeVisible(false)}
-        />
-      )}
-    </main>
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route element={<ProtectedRoute isAuthenticated={Boolean(user)} />}>
+        <Route element={<AppShell />}>
+          <Route
+            path="/change-password"
+            element={user?.mustChangePassword ? <ChangePasswordPage /> : <Navigate to="/" replace />}
+          />
+          <Route element={<AttendanceAccess mustChangePassword={user?.mustChangePassword ?? true} />}>
+            <Route index element={<TodayPage />} />
+            <Route path="/history" element={<HistoryPage />} />
+            <Route path="/history/:attendanceId" element={<AttendanceDetailPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+          </Route>
+        </Route>
+      </Route>
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
+}
+
+function AttendanceAccess({ mustChangePassword }: { mustChangePassword: boolean }) {
+  return mustChangePassword ? <Navigate to="/change-password" replace /> : <Outlet />;
 }

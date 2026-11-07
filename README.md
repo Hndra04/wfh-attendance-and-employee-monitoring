@@ -87,6 +87,12 @@ The Absensi API provides authenticated employee endpoints:
 
 Include the access token in the `Authorization` request header using the Bearer scheme. Photos are stored under `UPLOAD_DIR` (default `/app/uploads` in Docker) and are only served through these authenticated endpoints.
 
+## Employee web app
+
+The Absensi app at http://localhost:5173 supports employee login, required first-login password changes, today's check-in and check-out, attendance history and details, profile viewing, and sign-out. Check-in and check-out require a JPEG or PNG photo; camera access requires HTTPS or localhost, with a file picker available as a fallback. The app keeps access tokens in memory and uses the API's HttpOnly refresh-token cookie to restore sessions.
+
+The frontend reads `VITE_API_BASE_URL`. Docker Compose sets it to `http://localhost:${PORT_ABSENSI:-3001}/api/v1` for local development; update the `absensi-web` service environment if the API runs at a different origin.
+
 ## TypeORM entities and migrations
 
 Database models are TypeORM entities in each service's `src/database/entities` directory. Migrations are generated from those entities and reviewed before applying. Run monitoring migrations first on the shared database, then generate attendance migrations; attendance includes matching reference entities to preserve shared-table foreign keys without owning those tables:

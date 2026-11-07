@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import '@wfh-attendance/ui/styles.css';
 
 import App from './App';
+import './app.css';
 import './index.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

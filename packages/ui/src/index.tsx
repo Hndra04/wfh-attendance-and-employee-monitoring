@@ -130,7 +130,7 @@ export function Badge({
   return <span className={`ui-badge ui-badge--${tone}`}>{children}</span>;
 }
 
-export function Spinner({ label = 'Loading' }: { label?: string }) {
+export function Spinner({ label = 'Memuat' }: { label?: string }) {
   return (
     <span className="ui-spinner" role="status">
       <span className="ui-spinner__mark" aria-hidden="true" />
@@ -174,11 +174,11 @@ export function Toast({
     >
       <span>{message}</span>
       <Button
-        aria-label="Dismiss notification"
+        aria-label="Tutup notifikasi"
         variant="ghost"
         onClick={onDismiss}
       >
-        Dismiss
+        Tutup
       </Button>
     </div>
   );
@@ -220,10 +220,10 @@ export function Modal({
         <h2 id={titleId}>{title}</h2>
         <Button
           variant="ghost"
-          aria-label="Close dialog"
+          aria-label="Tutup dialog"
           onClick={onClose}
         >
-          Close
+          Tutup
         </Button>
       </div>
       {children}
@@ -240,7 +240,7 @@ export type TableColumn<Row> = {
 export function Table<Row extends { id: string }>({
   columns,
   rows,
-  emptyMessage = 'No results found.',
+  emptyMessage = 'Tidak ada hasil.',
 }: {
   columns: TableColumn<Row>[];
   rows: Row[];
@@ -289,23 +289,23 @@ export function Pagination({
   const currentPage = Math.min(Math.max(1, page), lastPage);
 
   return (
-    <nav className="ui-pagination" aria-label="Pagination">
+    <nav className="ui-pagination" aria-label="Navigasi halaman">
       <Button
         variant="secondary"
         disabled={currentPage <= 1}
         onClick={() => onPageChange(currentPage - 1)}
       >
-        Previous
+        Sebelumnya
       </Button>
       <span aria-live="polite">
-        Page {currentPage} of {lastPage}
+        Halaman {currentPage} dari {lastPage}
       </span>
       <Button
         variant="secondary"
         disabled={currentPage >= pageCount}
         onClick={() => onPageChange(currentPage + 1)}
       >
-        Next
+        Berikutnya
       </Button>
     </nav>
   );
@@ -324,16 +324,16 @@ export function DateRangePicker({
 }) {
   return (
     <fieldset className="ui-date-range">
-      <legend>Date range</legend>
+      <legend>Rentang tanggal</legend>
       <TextField
-        label="From"
+        label="Dari"
         type="date"
         value={from}
         max={to || undefined}
         onChange={(event) => onFromChange(event.target.value)}
       />
       <TextField
-        label="To"
+        label="Sampai"
         type="date"
         value={to}
         min={from || undefined}
