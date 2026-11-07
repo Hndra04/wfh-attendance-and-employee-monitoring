@@ -11,6 +11,7 @@ This repository contains the initial monorepo boilerplate for the two-scope appl
 - `apps/monitoring-web` — HRD-facing React app
 - `packages/absensi-service` — NestJS attendance backend
 - `packages/monitoring-service` — NestJS monitoring backend
+- `packages/ui` — shared accessible React components and styles
 - `docker-compose.yml` — MySQL 8 service for local development
 
 ## Docker-based setup
@@ -51,6 +52,10 @@ Set `JWT_ACCESS_TTL` to a duration such as `15m` or `1h`. Set `ABSENSI_WEB_ORIGI
 
 Use unique, high-entropy `JWT_SECRET_ABSENSI` and `JWT_SECRET_MONITORING` values in `.env`; the Compose defaults are for local development only.
 Monitoring calls the Absensi internal API over the Compose network using `INTERNAL_SERVICE_TOKEN`. `ABSENSI_SERVICE_URL` defaults to `http://absensi-service:${PORT_ABSENSI}/api/v1` in Compose; override it only when the services are hosted at a different address.
+
+## Shared UI foundation
+
+Both React apps use `@wfh-attendance/ui` for accessible buttons, labelled inputs and selects, badges, loading and empty states, toasts, dialogs, tables, pagination, date ranges, and authenticated route guards. Shared styles provide keyboard focus indicators, responsive layouts, and reduced-motion support. The package uses the existing React and React Router dependencies and adds no UI framework.
 
 ## Employee management API
 

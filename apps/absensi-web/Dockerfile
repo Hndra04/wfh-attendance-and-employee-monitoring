@@ -12,6 +12,8 @@ COPY packages/monitoring-service/package.json ./packages/monitoring-service/pack
 COPY packages/monitoring-service/tsconfig.json ./packages/monitoring-service/tsconfig.json
 COPY packages/monitoring-service/nest-cli.json ./packages/monitoring-service/nest-cli.json
 COPY packages/monitoring-service/src ./packages/monitoring-service/src
+COPY packages/ui/package.json ./packages/ui/package.json
+COPY packages/ui/src ./packages/ui/src
 COPY apps/absensi-web/package.json ./apps/absensi-web/package.json
 COPY apps/absensi-web/tsconfig.json ./apps/absensi-web/tsconfig.json
 COPY apps/absensi-web/tsconfig.node.json ./apps/absensi-web/tsconfig.node.json

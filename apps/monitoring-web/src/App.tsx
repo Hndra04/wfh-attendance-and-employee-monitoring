@@ -1,19 +1,39 @@
+import { useState } from 'react';
+
+import { Badge, Button, EmptyState, Toast } from '@wfh-attendance/ui';
+
 export default function App() {
+  const [noticeVisible, setNoticeVisible] = useState(false);
+
   return (
-    <main className="page-shell">
-      <section className="card">
-        <p className="eyebrow">Monitoring Karyawan</p>
-        <h1>HRD monitoring shell</h1>
-        <p>
-          This boilerplate covers the HRD dashboard, employee management, and attendance review
-          flows described in the PRD.
-        </p>
-        <ul>
-          <li>Dashboard with summary cards and attendance trends</li>
-          <li>Employee CRUD and password reset flows</li>
-          <li>Read-only attendance monitoring and detail views</li>
-        </ul>
+    <main className="ui-page">
+      <header className="ui-page-header">
+        <div>
+          <p className="ui-eyebrow">Monitoring Karyawan</p>
+          <h1>Employee monitoring</h1>
+          <p>Shared, accessible UI components are ready for the HRD experience.</p>
+        </div>
+        <Badge tone="success">Foundation ready</Badge>
+      </header>
+      <section className="ui-card">
+        <h2>Attendance overview</h2>
+        <p>Employee and attendance information will appear here.</p>
+        <div className="ui-demo-actions">
+          <Button onClick={() => setNoticeVisible(true)}>Preview notification</Button>
+          <Badge>Read-only attendance</Badge>
+        </div>
+        <EmptyState
+          title="No records to show"
+          description="Dashboard and attendance records will appear here."
+        />
       </section>
+      {noticeVisible && (
+        <Toast
+          message="Shared notification component is working."
+          tone="success"
+          onDismiss={() => setNoticeVisible(false)}
+        />
+      )}
     </main>
   );
 }
