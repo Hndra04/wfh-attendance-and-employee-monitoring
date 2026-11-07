@@ -8,7 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcryptjs';
 import { randomBytes } from 'node:crypto';
 import { ulid } from 'ulid';
-import { DataSource, IsNull, QueryFailedError, Repository } from 'typeorm';
+import { DataSource, In, IsNull, QueryFailedError, Repository } from 'typeorm';
 
 import { Employee, EmployeeStatus } from '../database/entities/employee.entity';
 import { RefreshToken } from '../database/entities/refresh-token.entity';
@@ -255,6 +255,18 @@ export class EmployeesService {
     });
 
     return { data: employees.map(({ id }) => id) };
+  }
+
+  async getAttendanceProfiles(ids: string[]) {
+    if (ids.length === 0) {
+      return [];
+    }
+
+    return this.employees.find({
+      select: { id: true, fullName: true, department: true, position: true },
+      where: { id: In(ids) },
+      withDeleted: true,
+    });
   }
 
   private async findEmployee(repository: Repository<Employee>, id: string) {

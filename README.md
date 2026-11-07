@@ -50,12 +50,24 @@ Both APIs expose `POST /api/v1/auth/login`, `POST /api/v1/auth/refresh`, `POST /
 Set `JWT_ACCESS_TTL` to a duration such as `15m` or `1h`. Set `ABSENSI_WEB_ORIGIN` and `MONITORING_WEB_ORIGIN` when the frontends use non-default origins. `TRUSTED_PROXY_HOPS` defaults to `0`; configure it to the exact number of trusted reverse-proxy hops so login throttling uses the correct client IP. Failed-login limits are held in each API process, so multiple replicas require a shared rate-limit store.
 
 Use unique, high-entropy `JWT_SECRET_ABSENSI` and `JWT_SECRET_MONITORING` values in `.env`; the Compose defaults are for local development only.
+Monitoring calls the Absensi internal API over the Compose network using `INTERNAL_SERVICE_TOKEN`. `ABSENSI_SERVICE_URL` defaults to `http://absensi-service:${PORT_ABSENSI}/api/v1` in Compose; override it only when the services are hosted at a different address.
 
 ## Employee management API
 
 The monitoring API provides HRD-only employee list/search/filter, detail, create, update, status, soft-delete, password-reset, and explicit login-email-change endpoints under `/api/v1/employees`. Creating an employee and resetting a password each return a temporary password once; employees must change it at first login. Change an employee login email with `PATCH /api/v1/employees/{id}/email` and `{ "email": "new@example.test", "confirm": true }`; the employee and login email update in one transaction.
 
 The attendance service can retrieve employee details from `GET /api/v1/internal/employees/{id}` and resolve active IDs from `GET /api/v1/internal/employees/ids?department=...`. These monitoring endpoints require the `x-internal-service-token` header set to `INTERNAL_SERVICE_TOKEN`.
+
+## HRD attendance monitoring API
+
+The monitoring API provides authenticated, read-only attendance endpoints:
+
+- `GET /api/v1/attendances` supports `page`, `limit`, `employeeId`, `department`, `from`, `to`, `status`, and `sort` filters.
+- `GET /api/v1/attendances/{id}` returns an attendance record with its employee profile.
+- `GET /api/v1/attendances/{id}/photos/{kind}` streams its private photo; `kind` is `check-in` or `check-out`.
+- `GET /api/v1/dashboard/summary` returns today's Jakarta-date counters and the seven-day attendance series.
+
+The monitoring service resolves department filters to active employee IDs and calls the Absensi internal list, detail, photo, summary, and series routes with `x-internal-service-token`. Attendance photo URLs are proxied through monitoring; storage filenames and paths are not returned to HRD clients.
 
 ## Attendance API
 
@@ -66,6 +78,7 @@ The Absensi API provides authenticated employee endpoints:
 - `GET /api/v1/attendances/me` returns the employee's paginated history. Optional query parameters are `from`, `to` (`YYYY-MM-DD`), `page`, `limit` (maximum 100), and `sort` (`asc` or `desc`).
 - `GET /api/v1/attendances/me/{attendanceId}` returns one of the employee's records.
 - `GET /api/v1/attendances/me/{attendanceId}/photos/{kind}` streams that record's private photo; `kind` is `check-in` or `check-out`. Requests for another employee's photo return `403`.
+- Internal read-only routes under `/api/v1/internal/attendances` provide HRD list/detail/photos and dashboard summary/series data to monitoring. They require the `x-internal-service-token` header and are not intended for browser clients.
 
 Include the access token in the `Authorization` request header using the Bearer scheme. Photos are stored under `UPLOAD_DIR` (default `/app/uploads` in Docker) and are only served through these authenticated endpoints.
 
@@ -98,10 +111,4 @@ docker compose build absensi-service
 docker compose logs -f absensi-service
 ```
 
-## Current status
-
-Sprints 0–4 (Foundation, Data foundation, Authentication, Attendance API, and Employee management API) are complete. Employee management includes HRD CRUD, account creation/reset, email confirmation, and service-token-protected internal lookups. Both APIs have role-specific authentication, refresh-token rotation, and guarded profile/password endpoints; the Absensi API has automated attendance tests and has been smoke-tested in Docker for photo check-in/out, ownership, and duplicate protection.
-
-## Notes
-
-The PRD defines strict architecture requirements around service boundaries, shared `users` table ownership, and API conventions. Employee snapshots are no longer used; attendance reads active employee eligibility from the shared `users` table, while monitoring resolves department filters before requesting attendance data."
+"

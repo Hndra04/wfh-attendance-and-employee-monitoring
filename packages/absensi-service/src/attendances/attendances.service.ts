@@ -3,6 +3,7 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  BadRequestException,
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -12,9 +13,11 @@ import { ulid } from 'ulid';
 import { AuthenticatedUser } from '../auth/auth.types';
 import { Attendance, AttendanceStatus } from '../database/entities/attendance.entity';
 import { Employee } from '../database/entities/employee.entity';
+import { User, UserRole } from '../database/entities/user.entity';
 import { AttendancePhotoStore } from './attendance-photo.store';
 import { AttendanceQueryDto } from './dto/attendance-query.dto';
 import { CheckInDto } from './dto/check-in.dto';
+import { InternalAttendanceQueryDto } from './dto/internal-attendance-query.dto';
 import {
   assertDateRange,
   getDurationMinutes,
@@ -37,6 +40,8 @@ export class AttendancesService {
   constructor(
     @InjectRepository(Attendance)
     private readonly attendances: Repository<Attendance>,
+    @InjectRepository(User)
+    private readonly users: Repository<User>,
     private readonly photos: AttendancePhotoStore,
   ) {
     parseWorkStartTime(this.workStartTime);
@@ -154,6 +159,160 @@ export class AttendancesService {
     return { data: records.map((record) => this.toAttendanceResponse(record)), meta };
   }
 
+  async listInternal(query: InternalAttendanceQueryDto) {
+    assertDateRange(query.from, query.to);
+    const employeeIds = query.employeeIds
+      ?.split(',')
+      .map((id) => id.trim())
+      .filter(Boolean);
+
+    if (employeeIds?.some((id) => !/^[0-9A-HJKMNP-TV-Z]{26}$/i.test(id))) {
+      throw new BadRequestException('employeeIds must contain comma-separated ULIDs.');
+    }
+
+    if (query.employeeIds !== undefined && !employeeIds?.length) {
+      return {
+        data: [],
+        meta: { page: query.page, limit: query.limit, total: 0, totalPages: 0 },
+      };
+    }
+
+    const queryBuilder = this.attendances.createQueryBuilder('attendance');
+    if (query.employeeId) {
+      queryBuilder.andWhere('attendance.employee = :employeeId', {
+        employeeId: query.employeeId,
+      });
+    }
+    if (employeeIds) {
+      queryBuilder.andWhere('attendance.employee IN (:...employeeIds)', { employeeIds });
+    }
+    if (query.from) {
+      queryBuilder.andWhere('attendance.attendanceDate >= :from', { from: query.from });
+    }
+    if (query.to) {
+      queryBuilder.andWhere('attendance.attendanceDate <= :to', { to: query.to });
+    }
+    if (query.status) {
+      queryBuilder.andWhere('attendance.status = :status', { status: query.status });
+    }
+
+    const direction = query.sort === 'asc' ? 'ASC' : 'DESC';
+    const [records, total] = await queryBuilder
+      .orderBy('attendance.attendanceDate', direction)
+      .addOrderBy('attendance.checkInAt', direction)
+      .addOrderBy('attendance.id', direction)
+      .skip((query.page - 1) * query.limit)
+      .take(query.limit)
+      .getManyAndCount();
+
+    return {
+      data: records.map((record) => this.toInternalAttendanceResponse(record)),
+      meta: {
+        page: query.page,
+        limit: query.limit,
+        total,
+        totalPages: Math.ceil(total / query.limit),
+      },
+    };
+  }
+
+  async getInternalById(id: string) {
+    const attendance = await this.attendances.findOne({ where: { id } });
+    if (!attendance) {
+      throw new NotFoundException('Attendance record was not found.');
+    }
+    return { data: this.toInternalAttendanceResponse(attendance) };
+  }
+
+  async getInternalPhoto(id: string, kind: string) {
+    const attendance = await this.attendances.findOne({ where: { id } });
+    if (!attendance) {
+      throw new NotFoundException('Attendance record was not found.');
+    }
+
+    const fileName =
+      kind === 'check-in'
+        ? attendance.checkInPhotoPath
+        : kind === 'check-out'
+          ? attendance.checkOutPhotoPath
+          : null;
+    if (!fileName) {
+      throw new NotFoundException('Attendance photo was not found.');
+    }
+
+    return this.photos.open(fileName);
+  }
+
+  async getInternalSummary(date: string) {
+    const [totalActiveEmployees, counts] = await Promise.all([
+      this.users.count({ where: { role: UserRole.EMPLOYEE, isActive: true } }),
+      this.attendances
+        .createQueryBuilder('attendance')
+        .innerJoin(
+          User,
+          'activeEmployee',
+          'activeEmployee.employee_id = attendance.employee_id AND activeEmployee.role = :role AND activeEmployee.is_active = :active AND activeEmployee.deleted_at IS NULL',
+          { role: UserRole.EMPLOYEE, active: true },
+        )
+        .select('COUNT(*)', 'checkedIn')
+        .addSelect(
+          'SUM(CASE WHEN attendance.checkOutAt IS NOT NULL THEN 1 ELSE 0 END)',
+          'checkedOut',
+        )
+        .where('attendance.attendanceDate = :date', { date })
+        .getRawOne<{ checkedIn: string; checkedOut: string }>(),
+    ]);
+    const checkedIn = Number(counts?.checkedIn ?? 0);
+
+    return {
+      data: {
+        date,
+        totalActiveEmployees,
+        checkedIn,
+        notCheckedIn: Math.max(0, totalActiveEmployees - checkedIn),
+        checkedOut: Number(counts?.checkedOut ?? 0),
+      },
+    };
+  }
+
+  async getInternalSeries(from: string, to: string) {
+    assertDateRange(from, to);
+    const fromTime = Date.parse(`${from}T00:00:00.000Z`);
+    const toTime = Date.parse(`${to}T00:00:00.000Z`);
+    const days = Math.floor((toTime - fromTime) / 86_400_000) + 1;
+    if (days > 7) {
+      throw new BadRequestException('The attendance series cannot exceed 7 days.');
+    }
+
+    const rows = await this.attendances
+      .createQueryBuilder('attendance')
+      .select('attendance.attendanceDate', 'date')
+      .addSelect('COUNT(*)', 'total')
+      .addSelect('SUM(CASE WHEN attendance.status = :present THEN 1 ELSE 0 END)', 'present')
+      .addSelect('SUM(CASE WHEN attendance.status = :late THEN 1 ELSE 0 END)', 'late')
+      .where('attendance.attendanceDate BETWEEN :from AND :to', { from, to })
+      .setParameters({
+        present: AttendanceStatus.PRESENT,
+        late: AttendanceStatus.LATE,
+      })
+      .groupBy('attendance.attendanceDate')
+      .orderBy('attendance.attendanceDate', 'ASC')
+      .getRawMany<{ date: string; total: string; present: string; late: string }>();
+
+    const totalsByDate = new Map(
+      rows.map((row) => [
+        String(row.date).slice(0, 10),
+        { total: Number(row.total), present: Number(row.present), late: Number(row.late) },
+      ]),
+    );
+    const data = Array.from({ length: days }, (_, index) => {
+      const date = new Date(fromTime + index * 86_400_000).toISOString().slice(0, 10);
+      return { date, ...(totalsByDate.get(date) ?? { total: 0, present: 0, late: 0 }) };
+    });
+
+    return { data };
+  }
+
   async getMineById(user: AuthenticatedUser, attendanceId: string) {
     const employeeId = this.getEligibleEmployeeId(user);
     const attendance = await this.attendances.findOne({
@@ -238,6 +397,21 @@ export class AttendancesService {
       checkOutAt: attendance.checkOutAt,
       checkInPhotoUrl: `${basePath}/check-in`,
       checkOutPhotoUrl: attendance.checkOutPhotoPath ? `${basePath}/check-out` : null,
+      notes: attendance.notes,
+      status: attendance.status,
+      durationMinutes: getDurationMinutes(attendance.checkInAt, attendance.checkOutAt),
+    };
+  }
+
+  private toInternalAttendanceResponse(attendance: Attendance) {
+    return {
+      id: attendance.id,
+      employeeId: attendance.employeeId,
+      attendanceDate: attendance.attendanceDate,
+      checkInAt: attendance.checkInAt,
+      checkOutAt: attendance.checkOutAt,
+      checkInPhotoFileName: attendance.checkInPhotoPath,
+      checkOutPhotoFileName: attendance.checkOutPhotoPath,
       notes: attendance.notes,
       status: attendance.status,
       durationMinutes: getDurationMinutes(attendance.checkInAt, attendance.checkOutAt),

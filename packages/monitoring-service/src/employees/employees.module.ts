@@ -13,5 +13,6 @@ import { InternalServiceGuard } from './internal-service.guard';
   imports: [TypeOrmModule.forFeature([Employee, User, RefreshToken])],
   controllers: [EmployeesController, InternalEmployeesController],
   providers: [EmployeesService, InternalServiceGuard],
+  exports: [EmployeesService],
 })
 export class EmployeesModule {}

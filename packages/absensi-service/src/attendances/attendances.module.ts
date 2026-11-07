@@ -8,10 +8,12 @@ import { AuthGuard } from '../auth/auth.guard';
 import { AttendancePhotoStore } from './attendance-photo.store';
 import { AttendancesController } from './attendances.controller';
 import { AttendancesService } from './attendances.service';
+import { InternalAttendancesController } from './internal-attendances.controller';
+import { InternalServiceGuard } from './internal-service.guard';
 
 @Module({
   imports: [JwtModule.register({}), TypeOrmModule.forFeature([Attendance, User])],
-  controllers: [AttendancesController],
-  providers: [AuthGuard, AttendancesService, AttendancePhotoStore],
+  controllers: [AttendancesController, InternalAttendancesController],
+  providers: [AuthGuard, InternalServiceGuard, AttendancesService, AttendancePhotoStore],
 })
 export class AttendancesModule {}

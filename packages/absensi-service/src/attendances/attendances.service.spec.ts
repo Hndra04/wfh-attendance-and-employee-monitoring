@@ -1,13 +1,14 @@
-import { ConflictException, ForbiddenException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException } from '@nestjs/common';
 import { QueryFailedError, Repository } from 'typeorm';
 import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 
 import { AuthenticatedUser } from '../auth/auth.types';
 import { Attendance, AttendanceStatus } from '../database/entities/attendance.entity';
-import { UserRole } from '../database/entities/user.entity';
+import { User, UserRole } from '../database/entities/user.entity';
 import { AttendancePhotoStore } from './attendance-photo.store';
 import { AttendancesService } from './attendances.service';
 import { AttendanceQueryDto } from './dto/attendance-query.dto';
+import { InternalAttendanceQueryDto } from './dto/internal-attendance-query.dto';
 
 describe('AttendancesService', () => {
   let service: AttendancesService;
@@ -18,6 +19,7 @@ describe('AttendancesService', () => {
     createQueryBuilder: Mock;
     manager: { transaction: Mock };
   };
+  let users: { count: Mock };
   let photos: { store: Mock; remove: Mock; open: Mock };
 
   beforeEach(() => {
@@ -29,6 +31,7 @@ describe('AttendancesService', () => {
       createQueryBuilder: vi.fn(),
       manager: { transaction: vi.fn() },
     };
+    users = { count: vi.fn() };
     photos = {
       store: vi.fn().mockResolvedValue({ fileName: '01J00000000000000000000001.jpg', mimeType: 'image/jpeg' }),
       remove: vi.fn(),
@@ -36,6 +39,7 @@ describe('AttendancesService', () => {
     };
     service = new AttendancesService(
       attendances as unknown as Repository<Attendance>,
+      users as unknown as Repository<User>,
       photos as unknown as AttendancePhotoStore,
     );
   });
@@ -167,6 +171,126 @@ describe('AttendancesService', () => {
     expect(queryBuilder.skip).toHaveBeenCalledWith(10);
     expect(result.meta).toEqual({ page: 2, limit: 10, total: 11, totalPages: 2 });
     expect(result.data[0].durationMinutes).toBe(480);
+  });
+
+  it('returns an empty page without querying for an empty employee ID filter', async () => {
+    const result = await service.listInternal(
+      Object.assign(new InternalAttendanceQueryDto(), { employeeIds: '' }),
+    );
+
+    expect(result).toEqual({
+      data: [],
+      meta: { page: 1, limit: 10, total: 0, totalPages: 0 },
+    });
+    expect(attendances.createQueryBuilder).not.toHaveBeenCalled();
+  });
+
+  it('rejects malformed employee IDs in internal list filters', async () => {
+    await expect(
+      service.listInternal(
+        Object.assign(new InternalAttendanceQueryDto(), { employeeIds: 'not-an-id' }),
+      ),
+    ).rejects.toThrow(BadRequestException);
+    expect(attendances.createQueryBuilder).not.toHaveBeenCalled();
+  });
+
+  it('returns paginated internal attendance fields without employee-facing photo URLs', async () => {
+    const record = {
+      id: 'attendance-1',
+      employeeId: '01J00000000000000000000001',
+      attendanceDate: '2026-11-06',
+      checkInAt: new Date('2026-11-06T02:00:00Z'),
+      checkOutAt: null,
+      checkInPhotoPath: '01J00000000000000000000001.jpg',
+      checkOutPhotoPath: null,
+      notes: null,
+      status: AttendanceStatus.PRESENT,
+    };
+    const queryBuilder = {
+      andWhere: vi.fn().mockReturnThis(),
+      orderBy: vi.fn().mockReturnThis(),
+      addOrderBy: vi.fn().mockReturnThis(),
+      skip: vi.fn().mockReturnThis(),
+      take: vi.fn().mockReturnThis(),
+      getManyAndCount: vi.fn().mockResolvedValue([[record], 1]),
+    };
+    attendances.createQueryBuilder.mockReturnValue(queryBuilder);
+
+    const result = await service.listInternal(
+      Object.assign(new InternalAttendanceQueryDto(), {
+        employeeIds: '01J00000000000000000000001',
+        from: '2026-11-01',
+        to: '2026-11-30',
+        page: 1,
+        limit: 10,
+      }),
+    );
+
+    expect(queryBuilder.andWhere).toHaveBeenCalledWith(
+      'attendance.employee IN (:...employeeIds)',
+      { employeeIds: ['01J00000000000000000000001'] },
+    );
+    expect(result.data[0]).toMatchObject({
+      id: 'attendance-1',
+      checkInPhotoFileName: '01J00000000000000000000001.jpg',
+    });
+    expect(result.meta.total).toBe(1);
+  });
+
+  it('returns internal summary counts for the requested date', async () => {
+    users.count.mockResolvedValue(8);
+    const queryBuilder = {
+      innerJoin: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      addSelect: vi.fn().mockReturnThis(),
+      where: vi.fn().mockReturnThis(),
+      getRawOne: vi.fn().mockResolvedValue({ checkedIn: '3', checkedOut: '2' }),
+    };
+    attendances.createQueryBuilder.mockReturnValue(queryBuilder);
+
+    await expect(service.getInternalSummary('2026-11-06')).resolves.toEqual({
+      data: {
+        date: '2026-11-06',
+        totalActiveEmployees: 8,
+        checkedIn: 3,
+        notCheckedIn: 5,
+        checkedOut: 2,
+      },
+    });
+  });
+
+  it('fills a seven-day series with zero-count dates and rejects longer ranges', async () => {
+    const queryBuilder = {
+      select: vi.fn().mockReturnThis(),
+      addSelect: vi.fn().mockReturnThis(),
+      where: vi.fn().mockReturnThis(),
+      setParameters: vi.fn().mockReturnThis(),
+      groupBy: vi.fn().mockReturnThis(),
+      orderBy: vi.fn().mockReturnThis(),
+      getRawMany: vi.fn().mockResolvedValue([
+        { date: '2026-11-03', total: '2', present: '1', late: '1' },
+      ]),
+    };
+    attendances.createQueryBuilder.mockReturnValue(queryBuilder);
+
+    const result = await service.getInternalSeries('2026-11-01', '2026-11-07');
+    expect(result.data).toHaveLength(7);
+    expect(result.data[0]).toEqual({
+      date: '2026-11-01',
+      total: 0,
+      present: 0,
+      late: 0,
+    });
+    expect(result.data[2]).toEqual({
+      date: '2026-11-03',
+      total: 2,
+      present: 1,
+      late: 1,
+    });
+    await expect(
+      service.getInternalSeries('2026-11-01', '2026-11-08'),
+    ).rejects.toThrow(BadRequestException);
+    expect(attendances.createQueryBuilder).toHaveBeenCalledTimes(1);
   });
 });
 
