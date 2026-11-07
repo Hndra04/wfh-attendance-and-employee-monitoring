@@ -93,6 +93,12 @@ The Absensi app at http://localhost:5173 supports employee login, required first
 
 The frontend reads `VITE_API_BASE_URL`. Docker Compose sets it to `http://localhost:${PORT_ABSENSI:-3001}/api/v1` for local development; update the `absensi-web` service environment if the API runs at a different origin.
 
+## HRD monitoring web app
+
+The Monitoring app at http://localhost:5174 is for the bootstrapped HRD administrator. It provides today's attendance counters and seven-day chart, employee search and filtering, create/edit/status/soft-delete actions, one-time password creation and reset, explicitly confirmed login-email changes, and read-only attendance filtering and details. The first login requires changing the bootstrap password. Employee passwords are shown only immediately after creation or reset; copy and deliver them through a secure channel.
+
+The frontend reads `VITE_API_BASE_URL`. Docker Compose sets it to `http://localhost:${PORT_MONITORING:-3002}/api/v1` for local development; update the `monitoring-web` service environment if the API runs at a different origin.
+
 ## TypeORM entities and migrations
 
 Database models are TypeORM entities in each service's `src/database/entities` directory. Migrations are generated from those entities and reviewed before applying. Run monitoring migrations first on the shared database, then generate attendance migrations; attendance includes matching reference entities to preserve shared-table foreign keys without owning those tables:
