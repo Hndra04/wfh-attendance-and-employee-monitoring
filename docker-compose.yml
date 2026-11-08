@@ -1,0 +1,163 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: wfh-attendance-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-wfh_attendance_db}
+      MYSQL_USER: ${MYSQL_USER:-wfh_attendance_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-wfh_attendance_password}
+    ports:
+      - '3306:3306'
+    volumes:
+      - wfh_attendance_mysql_data:/var/lib/mysql
+    command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p$${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  schema-migrate:
+    build:
+      context: .
+      dockerfile: packages/monitoring-service/Dockerfile
+    container_name: wfh-attendance-schema-migrate
+    restart: "no"
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ${MYSQL_DATABASE:-wfh_attendance_db}
+      DB_USER: ${MYSQL_USER:-wfh_attendance_user}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-wfh_attendance_password}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    command:
+      - sh
+      - -c
+      - npm run db:migrate --workspace=@wfh-attendance/monitoring-service && npm run db:migrate --workspace=@wfh-attendance/absensi-service
+
+  absensi-service:
+    build:
+      context: .
+      dockerfile: packages/absensi-service/Dockerfile
+    container_name: wfh-attendance-absensi-service
+    restart: unless-stopped
+    environment:
+      PORT_ABSENSI: ${PORT_ABSENSI:-3001}
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ${MYSQL_DATABASE:-wfh_attendance_db}
+      DB_USER: ${MYSQL_USER:-wfh_attendance_user}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-wfh_attendance_password}
+      JWT_SECRET_ABSENSI: ${JWT_SECRET_ABSENSI:-dev_absensi_secret}
+      JWT_ACCESS_TTL: ${JWT_ACCESS_TTL:-15m}
+      TRUSTED_PROXY_HOPS: ${TRUSTED_PROXY_HOPS:-0}
+      CORS_ORIGIN: ${ABSENSI_WEB_ORIGIN:-http://localhost:5173}
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:-dev_internal_token}
+      WORK_START_TIME: ${WORK_START_TIME:-09:00}
+      UPLOAD_DIR: ${UPLOAD_DIR:-/app/uploads}
+    depends_on:
+      schema-migrate:
+        condition: service_completed_successfully
+    ports:
+      - '${PORT_ABSENSI:-3001}:${PORT_ABSENSI:-3001}'
+    volumes:
+      - ./uploads:/app/uploads
+
+  monitoring-service:
+    build:
+      context: .
+      dockerfile: packages/monitoring-service/Dockerfile
+    container_name: wfh-attendance-monitoring-service
+    restart: unless-stopped
+    environment:
+      PORT_MONITORING: ${PORT_MONITORING:-3002}
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ${MYSQL_DATABASE:-wfh_attendance_db}
+      DB_USER: ${MYSQL_USER:-wfh_attendance_user}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-wfh_attendance_password}
+      JWT_SECRET_MONITORING: ${JWT_SECRET_MONITORING:-dev_monitoring_secret}
+      JWT_ACCESS_TTL: ${JWT_ACCESS_TTL:-15m}
+      TRUSTED_PROXY_HOPS: ${TRUSTED_PROXY_HOPS:-0}
+      CORS_ORIGIN: ${MONITORING_WEB_ORIGIN:-http://localhost:5174}
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:-dev_internal_token}
+      ABSENSI_SERVICE_URL: ${ABSENSI_SERVICE_URL:-http://absensi-service:${PORT_ABSENSI:-3001}/api/v1}
+    depends_on:
+      schema-migrate:
+        condition: service_completed_successfully
+    ports:
+      - '${PORT_MONITORING:-3002}:${PORT_MONITORING:-3002}'
+
+  admin-bootstrap:
+    build:
+      context: .
+      dockerfile: packages/monitoring-service/Dockerfile
+    container_name: wfh-attendance-admin-bootstrap
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ${MYSQL_DATABASE:-wfh_attendance_db}
+      DB_USER: ${MYSQL_USER:-wfh_attendance_user}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-wfh_attendance_password}
+      INITIAL_HRD_ADMIN_EMAIL: ${INITIAL_HRD_ADMIN_EMAIL:-}
+      INITIAL_HRD_ADMIN_PASSWORD: ${INITIAL_HRD_ADMIN_PASSWORD:-}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    command: ["npm", "run", "bootstrap:admin"]
+
+  demo-seed:
+    profiles: ["tools"]
+    build:
+      context: .
+      dockerfile: packages/monitoring-service/Dockerfile
+    restart: "no"
+    working_dir: /app
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ${MYSQL_DATABASE:-wfh_attendance_db}
+      DB_USER: ${MYSQL_USER:-wfh_attendance_user}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-wfh_attendance_password}
+      DEMO_EMPLOYEE_PASSWORD: ${DEMO_EMPLOYEE_PASSWORD}
+    depends_on:
+      schema-migrate:
+        condition: service_completed_successfully
+    command:
+      - sh
+      - -c
+      - node packages/monitoring-service/scripts/seed-demo.mjs && node packages/absensi-service/scripts/seed-demo.mjs
+
+  absensi-web:
+    build:
+      context: .
+      dockerfile: apps/absensi-web/Dockerfile
+    container_name: wfh-attendance-absensi-web
+    restart: unless-stopped
+    environment:
+      VITE_API_BASE_URL: http://localhost:${PORT_ABSENSI:-3001}/api/v1
+    depends_on:
+      - absensi-service
+    ports:
+      - '5173:5173'
+
+  monitoring-web:
+    build:
+      context: .
+      dockerfile: apps/monitoring-web/Dockerfile
+    container_name: wfh-attendance-monitoring-web
+    restart: unless-stopped
+    environment:
+      VITE_API_BASE_URL: http://localhost:${PORT_MONITORING:-3002}/api/v1
+    depends_on:
+      - monitoring-service
+    ports:
+      - '5174:5174'
+
+volumes:
+  wfh_attendance_mysql_data:

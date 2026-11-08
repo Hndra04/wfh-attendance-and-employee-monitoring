@@ -1,0 +1,22 @@
+import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+
+import { AuthModule } from '../auth/auth.module';
+import { Employee } from '../database/entities/employee.entity';
+import { RefreshToken } from '../database/entities/refresh-token.entity';
+import { User } from '../database/entities/user.entity';
+import { EmployeesController } from './employees.controller';
+import { EmployeesService } from './employees.service';
+import { InternalEmployeesController } from './internal-employees.controller';
+import { InternalServiceGuard } from './internal-service.guard';
+
+@Module({
+  imports: [
+    AuthModule,
+    TypeOrmModule.forFeature([Employee, User, RefreshToken]),
+  ],
+  controllers: [EmployeesController, InternalEmployeesController],
+  providers: [EmployeesService, InternalServiceGuard],
+  exports: [EmployeesService],
+})
+export class EmployeesModule {}
